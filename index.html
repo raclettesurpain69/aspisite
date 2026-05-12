@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Theft Auto VI — Pré-commande Officielle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   RESET & BASE
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #c8a84b;
+  --gold-light: #e0c06a;
+  --gold-dark: #9a7d32;
+  --red: #8b0000;
+  --red-bright: #c0392b;
+  --black: #050505;
+  --dark: #0a0a0a;
+  --dark2: #111111;
+  --dark3: #1a1a1a;
+  --dark4: #222222;
+  --text: #d0d0d0;
+  --text-dim: #888;
+  --white: #f0f0f0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--black);
+  color: var(--text);
+  overflow-x: hidden;
+  cursor: default;
+}
+
+h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+/* =============================================
+   SCANLINES OVERLAY
+   ============================================= */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* =============================================
+   NAV
+   ============================================= */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 64px;
+  background: linear-gradient(to bottom, rgba(5,5,5,0.98) 0%, rgba(5,5,5,0.85) 100%);
+  border-bottom: 1px solid rgba(200,168,75,0.2);
+  backdrop-filter: blur(10px);
+}
+
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(200,168,75,0.4);
+}
+
+.nav-logo span { color: var(--white); }
+
+.nav-right { display: flex; align-items: center; gap: 1.5rem; }
+
+.nav-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--gold); }
+
+.cart-btn {
+  position: relative;
+  background: none;
+  border: 1px solid rgba(200,168,75,0.4);
+  color: var(--gold);
+  padding: 0.4rem 1rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cart-btn:hover { background: rgba(200,168,75,0.1); border-color: var(--gold); }
+
+.cart-count {
+  background: var(--red-bright);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+.cart-count.visible { display: flex; }
+
+/* =============================================
+   HERO
+   ============================================= */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 6rem 2rem 4rem;
+}
+
+/* Perspective grid */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(200,168,75,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,0.07) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: perspective(600px) rotateX(30deg) scaleY(1.5);
+  transform-origin: center bottom;
+  animation: gridPulse 8s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139,0,0,0.25) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(200,168,75,0.1) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.7) 60%, var(--black) 100%);
+}
+
+.hero-content { position: relative; z-index: 2; max-width: 900px; }
+
+.hero-eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.hero-title {
+  font-size: clamp(4rem, 12vw, 10rem);
+  line-height: 0.9;
+  color: var(--white);
+  text-shadow:
+    0 0 40px rgba(200,168,75,0.3),
+    0 4px 30px rgba(0,0,0,0.8);
+  margin-bottom: 0.3em;
+}
+
+.hero-title .vi {
+  color: var(--gold);
+  text-shadow:
+    0 0 60px rgba(200,168,75,0.6),
+    0 0 120px rgba(200,168,75,0.3);
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+.hero-release {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(200,168,75,0.08);
+  border: 1px solid rgba(200,168,75,0.3);
+  padding: 0.6rem 1.5rem;
+  border-radius: 2px;
+  margin-bottom: 2.5rem;
+}
+
+.hero-release-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.hero-release-date {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--white);
+  letter-spacing: 0.1em;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--black);
+  padding: 1rem 2.5rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.15em;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 30px rgba(200,168,75,0.3);
+}
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px rgba(200,168,75,0.5);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.5;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.hero-scroll span {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hero-scroll-arrow {
+  width: 20px;
+  height: 20px;
+  border-right: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  transform: rotate(45deg);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* =============================================
+   SECTION BASE
+   ============================================= */
+section { padding: 6rem 2rem; }
+
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.section-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: var(--white);
+  line-height: 1;
+}
+
+.section-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 1rem auto 0;
+}
+
+/* =============================================
+   EDITIONS GRID
+   ============================================= */
+#editions { background: var(--dark); }
+
+.editions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.edition-card {
+  background: var(--dark2);
+  border: 1px solid rgba(200,168,75,0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.4s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.edition-card:hover {
+  border-color: rgba(200,168,75,0.5);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(200,168,75,0.1);
+}
+
+.edition-card.featured {
+  border-color: rgba(200,168,75,0.4);
+  box-shadow: 0 0 40px rgba(200,168,75,0.08);
+}
+
+.edition-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--black);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+}
+
+.edition-img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--dark3);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edition-img-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cover art placeholders with visual styles */
+.cover-standard {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+.cover-deluxe {
+  background: linear-gradient(135deg, #1a0a00 0%, #3d1a00 50%, #8b3a0f 100%);
+}
+.cover-ultimate {
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1400 50%, #3a2e00 100%);
+}
+
+.cover-text {
+  font-family: 'Bebas Neue', sans-serif;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-gta {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  color: rgba(255,255,255,0.5);
+  display: block;
+}
+
+.cover-vi {
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(200,168,75,0.5);
+  display: block;
+}
+
+.cover-edition-name {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.4);
+  display: block;
+  margin-top: 0.3rem;
+}
+
+.edition-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+
+.edition-name {
+  font-size: 1.8rem;
+  color: var(--white);
+  margin-bottom: 0.2rem;
+}
+
+.edition-name span { color: var(--gold); }
+
+.edition-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 1.2rem;
+}
+
+.edition-price sup {
+  font-size: 1.2rem;
+  vertical-align: super;
+  color: var(--gold-dark);
+}
+
+.edition-features {
+  list-style: none;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.edition-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.edition-features li::before {
+  content: '▸';
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Platform selector */
+.platform-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.platform-btn {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--dark3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.platform-btn:hover { border-color: rgba(200,168,75,0.4); color: var(--text); }
+
+.platform-btn.active {
+  background: rgba(200,168,75,0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.platform-icon { font-size: 1rem; }
+
+.add-to-cart-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--black);
+  border: none;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  border-radius: 2px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(200,168,75,0.2);
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 30px rgba(200,168,75,0.4);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+}
+
+.add-to-cart-btn:active { transform: translateY(0); }
+
+/* =============================================
+   FEATURES STRIP
+   ============================================= */
+#features {
+  background: var(--black);
+  border-top: 1px solid rgba(200,168,75,0.1);
+  border-bottom: 1px solid rgba(200,168,75,0.1);
+  padding: 4rem 2rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.feature-item { }
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
+.feature-title {
+  font-size: 1rem;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+
+.feature-desc {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* =============================================
+   CART SIDEBAR
+   ============================================= */
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
+}
+
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+
+.cart-sidebar {
+  position: fixed;
+  top: 0; right: 0;
+  width: min(420px, 100vw);
+  height: 100vh;
+  background: var(--dark2);
+  border-left: 1px solid rgba(200,168,75,0.2);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cart-sidebar.open { transform: translateX(0); }
+
+.cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(200,168,75,0.15);
+}
+
+.cart-title {
+  font-size: 1.5rem;
+  color: var(--white);
+}
+
+.cart-close {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cart-close:hover { border-color: var(--red-bright); color: var(--red-bright); }
+
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 3rem 0;
+  color: var(--text-dim);
+}
+
+.cart-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+.cart-empty p { font-size: 0.9rem; }
+
+.cart-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  align-items: flex-start;
+}
+
+.cart-item-cover {
+  width: 70px;
+  height: 50px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+.cart-item-info { flex: 1; }
+
+.cart-item-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  color: var(--white);
+  margin-bottom: 0.2rem;
+}
+
+.cart-item-platform {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.cart-item-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.cart-item-remove {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.cart-item-remove:hover { color: var(--red-bright); }
+
+.cart-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(200,168,75,0.15);
+}
+
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.cart-total-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.cart-total-amount {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--gold);
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--black);
+  border: none;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.15em;
+  border-radius: 2px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(200,168,75,0.3);
+}
+.checkout-btn:hover {
+  box-shadow: 0 6px 30px rgba(200,168,75,0.5);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+}
+.checkout-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =============================================
+   MODAL CHECKOUT
+   ============================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  padding: 1rem;
+  backdrop-filter: blur(6px);
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--dark2);
+  border: 1px solid rgba(200,168,75,0.25);
+  border-radius: 4px;
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.95) translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+}
+
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.modal-title { font-size: 1.8rem; color: var(--white); }
+
+.modal-close {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-dim);
+  width: 36px; height: 36px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover { border-color: var(--red-bright); color: var(--red-bright); }
+
+.modal-order-summary {
+  margin: 1rem 1.5rem;
+  background: var(--dark3);
+  border: 1px solid rgba(200,168,75,0.1);
+  border-radius: 2px;
+  padding: 0.8rem 1rem;
+}
+
+.modal-order-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 0.2rem 0;
+}
+
+.modal-order-total {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(200,168,75,0.2);
+}
+
+/* Payment tabs */
+.payment-tabs {
+  display: flex;
+  margin: 0 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  gap: 0;
+}
+
+.payment-tab {
+  flex: 1;
+  padding: 0.8rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+}
+
+.payment-tab:hover { color: var(--text); }
+.payment-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.payment-content { display: none; padding: 1.5rem; }
+.payment-content.active { display: block; }
+
+/* Form styles */
+.form-group { margin-bottom: 1rem; }
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  background: var(--dark3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2px;
+  color: var(--white);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-input:focus { border-color: var(--gold); }
+.form-input::placeholder { color: rgba(255,255,255,0.2); }
+.form-input.error { border-color: var(--red-bright); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.form-error {
+  font-size: 0.75rem;
+  color: var(--red-bright);
+  margin-top: 0.3rem;
+  display: none;
+}
+
+.form-error.visible { display: block; }
+
+.card-icons {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.card-icon {
+  width: 40px;
+  height: 26px;
+  background: var(--dark3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+
+.stripe-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 0.8rem;
+}
+
+.stripe-badge svg { opacity: 0.5; }
+
+.paypal-content { text-align: center; padding: 1rem 0; }
+
+.paypal-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.paypal-logo .pay { color: #009cde; }
+.paypal-logo .pal { color: #012169; }
+
+.paypal-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.paypal-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #ffc439;
+  color: #003087;
+  border: none;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 24px;
+  transition: all 0.2s;
+}
+.paypal-btn:hover { background: #f0b429; transform: translateY(-1px); }
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--black);
+  border: none;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.15em;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(200,168,75,0.3);
+  position: relative;
+}
+.submit-btn:hover { box-shadow: 0 6px 30px rgba(200,168,75,0.5); }
+.submit-btn.loading { pointer-events: none; }
+
+.submit-btn .btn-text { transition: opacity 0.2s; }
+.submit-btn.loading .btn-text { opacity: 0; }
+
+.btn-spinner {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px; height: 20px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: var(--black);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+.submit-btn.loading .btn-spinner { display: block; }
+
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* =============================================
+   CONFIRMATION SCREEN
+   ============================================= */
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.confirmation-overlay.open { opacity: 1; pointer-events: all; }
+
+.confirmation-box {
+  text-align: center;
+  max-width: 500px;
+  padding: 2rem;
+  transform: translateY(30px);
+  transition: transform 0.5s 0.2s;
+}
+
+.confirmation-overlay.open .confirmation-box { transform: translateY(0); }
+
+.confirmation-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(200,168,75,0.1);
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(200,168,75,0.3); }
+  50% { box-shadow: 0 0 40px rgba(200,168,75,0.6); }
+}
+
+.confirmation-title {
+  font-size: 3rem;
+  color: var(--white);
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-subtitle {
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-details {
+  background: var(--dark2);
+  border: 1px solid rgba(200,168,75,0.2);
+  border-radius: 4px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.conf-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.conf-row:last-child { border-bottom: none; }
+.conf-row strong { color: var(--gold); }
+
+.confirmation-message {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.conf-back-btn {
+  padding: 0.8rem 2rem;
+  background: none;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.conf-back-btn:hover { background: rgba(200,168,75,0.1); }
+
+/* =============================================
+   TOAST NOTIFICATIONS
+   ============================================= */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.2rem;
+  background: var(--dark2);
+  border-radius: 3px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  border-left: 3px solid var(--gold);
+  max-width: 320px;
+  font-size: 0.88rem;
+  transform: translateX(120%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s;
+  opacity: 0;
+  pointer-events: all;
+}
+
+.toast.show { transform: translateX(0); opacity: 1; }
+.toast.hide { transform: translateX(120%); opacity: 0; }
+.toast.success { border-color: var(--gold); }
+.toast.error { border-color: var(--red-bright); }
+.toast.info { border-color: #4a9eff; }
+
+.toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+.toast-msg { color: var(--text); line-height: 1.3; }
+
+/* =============================================
+   FOOTER
+   ============================================= */
+footer {
+  background: var(--dark);
+  border-top: 1px solid rgba(200,168,75,0.1);
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+}
+
+.footer-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5rem;
+}
+
+.footer-tagline {
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.footer-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.footer-link:hover { color: var(--gold); }
+
+.footer-disclaimer {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* =============================================
+   SCROLL ANIMATIONS
+   ============================================= */
+.fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-up:nth-child(2) { transition-delay: 0.1s; }
+.fade-up:nth-child(3) { transition-delay: 0.2s; }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 600px) {
+  nav { padding: 0 1rem; }
+  .nav-link { display: none; }
+  .editions-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .hero-title { font-size: 4rem; }
+}
+
+/* =============================================
+   CARD NUMBER DISPLAY
+   ============================================= */
+.card-number-display {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.15em;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ROCKSTAR<span> GAMES</span></div>
+  <div class="nav-right">
+    <a href="#editions" class="nav-link">Éditions</a>
+    <a href="#features" class="nav-link">Inclus</a>
+    <button class="cart-btn" onclick="toggleCart()">
+      &#x1F6D2; Panier
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Pré-commande officielle</p>
+    <h1 class="hero-title">GRAND THEFT AUTO <span class="vi">VI</span></h1>
+    <p class="hero-subtitle">Une nouvelle ère du crime organisé</p>
+    <div class="hero-release">
+      <span class="hero-release-label">Date de sortie</span>
+      <span class="hero-release-date">AUTOMNE 2026</span>
+    </div>
+    <br>
+    <a href="#editions" class="hero-cta">&#9654; Pré-commander maintenant</a>
+  </div>
+  <div class="hero-scroll">
+    <span>Découvrir</span>
+    <div class="hero-scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- FEATURES STRIP -->
+<section id="features">
+  <div class="features-grid">
+    <div class="feature-item fade-up">
+      <span class="feature-icon">&#x26A1;</span>
+      <div class="feature-title">Accès Immédiat</div>
+      <div class="feature-desc">Clé de jeu livrée instantanément par email</div>
+    </div>
+    <div class="feature-item fade-up">
+      <span class="feature-icon">&#x1F512;</span>
+      <div class="feature-title">Paiement Sécurisé</div>
+      <div class="feature-desc">Cryptage SSL 256-bit via Stripe & PayPal</div>
+    </div>
+    <div class="feature-item fade-up">
+      <span class="feature-icon">&#x1F3AE;</span>
+      <div class="feature-title">PS5 & Xbox Series X</div>
+      <div class="feature-desc">Optimisé next-gen, 4K 60fps garanti</div>
+    </div>
+    <div class="feature-item fade-up">
+      <span class="feature-icon">&#x1F504;</span>
+      <div class="feature-title">Remboursement</div>
+      <div class="feature-desc">Annulation possible avant la sortie</div>
+    </div>
+  </div>
+</section>
+
+<!-- EDITIONS -->
+<section id="editions">
+  <div class="section-header">
+    <p class="section-label">Choisissez votre édition</p>
+    <h2 class="section-title">ÉDITIONS DISPONIBLES</h2>
+    <div class="section-divider"></div>
+  </div>
+  <div class="editions-grid">
+
+    <!-- STANDARD -->
+    <div class="edition-card fade-up">
+      <div class="edition-img cover-standard">
+        <div class="edition-img-bg">
+          <div class="cover-text">
+            <span class="cover-gta">GRAND THEFT AUTO</span>
+            <span class="cover-vi">VI</span>
+            <span class="cover-edition-name">STANDARD EDITION</span>
+          </div>
+        </div>
+      </div>
+      <div class="edition-body">
+        <h3 class="edition-name">ÉDITION <span>STANDARD</span></h3>
+        <div class="edition-price"><sup>€</sup>69<sup>,99</sup></div>
+        <ul class="edition-features">
+          <li>Jeu de base GTA VI</li>
+          <li>Pack bonus pré-commande</li>
+          <li>100 000 GTA$ offerts</li>
+          <li>Accès online dès le lancement</li>
+        </ul>
+        <div class="platform-selector">
+          <button class="platform-btn active" onclick="selectPlatform(this, 'std')" data-platform="PS5">
+            <span class="platform-icon">&#x1F7E6;</span> PS5
+          </button>
+          <button class="platform-btn" onclick="selectPlatform(this, 'std')" data-platform="Xbox Series X">
+            <span class="platform-icon">&#x1F7E9;</span> Xbox Series X
+          </button>
+        </div>
+        <button class="add-to-cart-btn" onclick="addToCart('Standard', 69.99, this)">
+          AJOUTER AU PANIER
+        </button>
+      </div>
+    </div>
+
+    <!-- DELUXE -->
+    <div class="edition-card featured fade-up">
+      <div class="edition-badge">POPULAIRE</div>
+      <div class="edition-img cover-deluxe">
+        <div class="edition-img-bg">
+          <div class="cover-text">
+            <span class="cover-gta">GRAND THEFT AUTO</span>
+            <span class="cover-vi">VI</span>
+            <span class="cover-edition-name">DELUXE EDITION</span>
+          </div>
+        </div>
+      </div>
+      <div class="edition-body">
+        <h3 class="edition-name">ÉDITION <span>DELUXE</span></h3>
+        <div class="edition-price"><sup>€</sup>89<sup>,99</sup></div>
+        <ul class="edition-features">
+          <li>Jeu de base GTA VI</li>
+          <li>Accès anticipé 3 jours</li>
+          <li>Pack tenues exclusives (8 tenues)</li>
+          <li>500 000 GTA$ en jeu</li>
+          <li>Artbook numérique 200 pages</li>
+          <li>Bande-son officielle (MP3)</li>
+        </ul>
+        <div class="platform-selector">
+          <button class="platform-btn active" onclick="selectPlatform(this, 'dlx')" data-platform="PS5">
+            <span class="platform-icon">&#x1F7E6;</span> PS5
+          </button>
+          <button class="platform-btn" onclick="selectPlatform(this, 'dlx')" data-platform="Xbox Series X">
+            <span class="platform-icon">&#x1F7E9;</span> Xbox Series X
+          </button>
+        </div>
+        <button class="add-to-cart-btn" onclick="addToCart('Deluxe', 89.99, this)">
+          AJOUTER AU PANIER
+        </button>
+      </div>
+    </div>
+
+    <!-- ULTIMATE -->
+    <div class="edition-card fade-up">
+      <div class="edition-badge" style="background: linear-gradient(135deg, #c0392b, #8b0000);">COLLECTOR</div>
+      <div class="edition-img cover-ultimate">
+        <div class="edition-img-bg">
+          <div class="cover-text">
+            <span class="cover-gta">GRAND THEFT AUTO</span>
+            <span class="cover-vi">VI</span>
+            <span class="cover-edition-name">ULTIMATE EDITION</span>
+          </div>
+        </div>
+      </div>
+      <div class="edition-body">
+        <h3 class="edition-name">ÉDITION <span>ULTIMATE</span></h3>
+        <div class="edition-price"><sup>€</sup>119<sup>,99</sup></div>
+        <ul class="edition-features">
+          <li>Jeu de base GTA VI</li>
+          <li>Accès anticipé 7 jours</li>
+          <li>Season Pass Year 1 (4 DLC)</li>
+          <li>2 000 000 GTA$ en jeu</li>
+          <li>Statue collector 30cm</li>
+          <li>Artbook physique premium</li>
+          <li>Steelbook exclusif</li>
+          <li>Toutes tenues Deluxe incluses</li>
+        </ul>
+        <div class="platform-selector">
+          <button class="platform-btn active" onclick="selectPlatform(this, 'ult')" data-platform="PS5">
+            <span class="platform-icon">&#x1F7E6;</span> PS5
+          </button>
+          <button class="platform-btn" onclick="selectPlatform(this, 'ult')" data-platform="Xbox Series X">
+            <span class="platform-icon">&#x1F7E9;</span> Xbox Series X
+          </button>
+        </div>
+        <button class="add-to-cart-btn" onclick="addToCart('Ultimate', 119.99, this)">
+          AJOUTER AU PANIER
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ROCKSTAR GAMES</div>
+  <div class="footer-tagline">Grand Theft Auto VI — Pré-commande officielle</div>
+  <div class="footer-links">
+    <a href="#" class="footer-link">Conditions d'utilisation</a>
+    <a href="#" class="footer-link">Politique de confidentialité</a>
+    <a href="#" class="footer-link">Support</a>
+    <a href="#" class="footer-link">Remboursements</a>
+  </div>
+  <p class="footer-disclaimer">
+    &copy; 2026 Rockstar Games, Inc. Grand Theft Auto et le logo Rockstar Games sont des marques déposées de Take-Two Interactive Software, Inc. aux États-Unis et dans d'autres pays. Ce site est un prototype de démonstration. Les clés de paiement sont des placeholders.
+  </p>
+</footer>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2 class="cart-title">MON PANIER</h2>
+    <button class="cart-close" onclick="toggleCart()">&#x2715;</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty" id="cartEmpty">
+      <div class="cart-empty-icon">&#x1F6D2;</div>
+      <p>Votre panier est vide</p>
+    </div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-amount" id="cartTotal">0,00 €</span>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="openCheckout()" disabled>
+      PROCÉDER AU PAIEMENT
+    </button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">PAIEMENT</h2>
+      <button class="modal-close" onclick="closeCheckout()">&#x2715;</button>
+    </div>
+
+    <div class="modal-order-summary" id="modalOrderSummary"></div>
+
+    <div class="payment-tabs">
+      <button class="payment-tab active" onclick="switchTab('stripe', this)">
+        &#x1F4B3; Carte bancaire
+      </button>
+      <button class="payment-tab" onclick="switchTab('paypal', this)">
+        &#x1F4B0; PayPal
+      </button>
+    </div>
+
+    <!-- STRIPE TAB -->
+    <div class="payment-content active" id="tab-stripe">
+      <div class="card-icons">
+        <div class="card-icon">VISA</div>
+        <div class="card-icon">MC</div>
+        <div class="card-icon">AMEX</div>
+        <div class="card-icon">CB</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom sur la carte</label>
+        <input class="form-input" id="cardName" type="text" placeholder="JEAN DUPONT" autocomplete="cc-name">
+        <div class="form-error" id="errCardName">Veuillez saisir le nom sur la carte</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Numéro de carte</label>
+        <input class="form-input card-number-display" id="cardNumber" type="text" placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number" oninput="formatCardNumber(this)">
+        <div class="form-error" id="errCardNumber">Numéro de carte invalide (16 chiffres)</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date d'expiration</label>
+          <input class="form-input" id="cardExpiry" type="text" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp" oninput="formatExpiry(this)">
+          <div class="form-error" id="errCardExpiry">Date invalide</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CVV</label>
+          <input class="form-input" id="cardCvv" type="text" placeholder="123" maxlength="4" autocomplete="cc-csc" oninput="this.value=this.value.replace(/\D/g,'')">
+          <div class="form-error" id="errCardCvv">CVV invalide</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email de confirmation</label>
+        <input class="form-input" id="cardEmail" type="email" placeholder="vous@exemple.com" autocomplete="email">
+        <div class="form-error" id="errCardEmail">Email invalide</div>
+      </div>
+
+      <div class="stripe-badge">
+        &#x1F512; Paiement sécurisé par Stripe — Clé test: pk_test_PLACEHOLDER
+      </div>
+
+      <button class="submit-btn" id="stripeSubmitBtn" onclick="submitStripe()">
+        <span class="btn-text">CONFIRMER LA COMMANDE</span>
+        <div class="btn-spinner"></div>
+      </button>
+    </div>
+
+    <!-- PAYPAL TAB -->
+    <div class="payment-content" id="tab-paypal">
+      <div class="paypal-content">
+        <div class="paypal-logo"><span class="pay">Pay</span><span class="pal">Pal</span></div>
+        <p class="paypal-desc">
+          Vous serez redirigé vers PayPal pour finaliser votre commande en toute sécurité.<br>
+          Clé merchant ID placeholder : <code style="color:var(--gold);font-size:0.8rem;">PAYPAL_MERCHANT_PLACEHOLDER</code>
+        </p>
+
+        <div class="form-group" style="text-align:left">
+          <label class="form-label">Email PayPal</label>
+          <input class="form-input" id="paypalEmail" type="email" placeholder="vous@exemple.com" autocomplete="email">
+          <div class="form-error" id="errPaypalEmail">Email invalide</div>
+        </div>
+
+        <button class="paypal-btn" onclick="submitPaypal()">
+          Payer avec PayPal
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFIRMATION SCREEN -->
+<div class="confirmation-overlay" id="confirmationScreen">
+  <div class="confirmation-box">
+    <div class="confirmation-icon">&#x2713;</div>
+    <h2 class="confirmation-title">COMMANDE CONFIRMÉE</h2>
+    <p class="confirmation-subtitle">Merci pour votre pré-commande !</p>
+    <div class="confirmation-details" id="confirmationDetails"></div>
+    <p class="confirmation-message">
+      Un email de confirmation a été envoyé à votre adresse.<br>
+      Votre clé de jeu sera disponible à la sortie officielle de GTA VI.<br>
+      Numéro de commande : <strong style="color:var(--gold)" id="orderNumber"></strong>
+    </p>
+    <button class="conf-back-btn" onclick="closeConfirmation()">
+      RETOUR À L'ACCUEIL
+    </button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// =============================================
+// STATE
+// =============================================
+const cart = [];
+let currentTab = 'stripe';
+
+const editionPlatforms = {
+  std: 'PS5',
+  dlx: 'PS5',
+  ult: 'PS5'
+};
+
+// =============================================
+// PLATFORM SELECTOR
+// =============================================
+function selectPlatform(btn, editionKey) {
+  const selector = btn.closest('.platform-selector');
+  selector.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  editionPlatforms[editionKey] = btn.dataset.platform;
+}
+
+// =============================================
+// CART LOGIC
+// =============================================
+function addToCart(edition, price, btn) {
+  const editionKey = { Standard: 'std', Deluxe: 'dlx', Ultimate: 'ult' }[edition];
+  const platform = editionPlatforms[editionKey];
+
+  const existing = cart.find(i => i.edition === edition && i.platform === platform);
+  if (existing) {
+    showToast(`${edition} Edition (${platform}) déjà dans le panier`, 'info');
+    return;
+  }
+
+  cart.push({ id: Date.now(), edition, price, platform });
+  updateCart();
+  showToast(`${edition} Edition ajoutée au panier !`, 'success');
+
+  btn.textContent = '✓ AJOUTÉ';
+  setTimeout(() => { btn.textContent = 'AJOUTER AU PANIER'; }, 1800);
+}
+
+function removeFromCart(id) {
+  const idx = cart.findIndex(i => i.id === id);
+  if (idx > -1) {
+    const item = cart[idx];
+    cart.splice(idx, 1);
+    updateCart();
+    showToast(`${item.edition} Edition retirée`, 'info');
+  }
+}
+
+function updateCart() {
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+  const count = cart.length;
+
+  // Count badge
+  const countEl = document.getElementById('cartCount');
+  countEl.textContent = count;
+  countEl.classList.toggle('visible', count > 0);
+
+  // Total
+  document.getElementById('cartTotal').textContent = formatPrice(total);
+
+  // Checkout button
+  document.getElementById('checkoutBtn').disabled = count === 0;
+
+  // Items list
+  const itemsEl = document.getElementById('cartItems');
+  const emptyEl = document.getElementById('cartEmpty');
+
+  if (count === 0) {
+    itemsEl.innerHTML = '';
+    itemsEl.appendChild(emptyEl);
+    emptyEl.style.display = '';
+  } else {
+    itemsEl.innerHTML = '';
+    cart.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      const coverClass = { Standard: 'cover-standard', Deluxe: 'cover-deluxe', Ultimate: 'cover-ultimate' }[item.edition];
+      el.innerHTML = `
+        <div class="cart-item-cover ${coverClass}">VI</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">GTA VI — ${item.edition.toUpperCase()}</div>
+          <div class="cart-item-platform">${item.platform}</div>
+        </div>
+        <div class="cart-item-price">${formatPrice(item.price)}</div>
+        <button class="cart-item-remove" onclick="removeFromCart(${item.id})" title="Retirer">&#x2715;</button>
+      `;
+      itemsEl.appendChild(el);
+    });
+  }
+}
+
+function toggleCart() {
+  const overlay = document.getElementById('cartOverlay');
+  const sidebar = document.getElementById('cartSidebar');
+  const open = sidebar.classList.contains('open');
+  overlay.classList.toggle('open', !open);
+  sidebar.classList.toggle('open', !open);
+  document.body.style.overflow = open ? '' : 'hidden';
+}
+
+// =============================================
+// CHECKOUT MODAL
+// =============================================
+function openCheckout() {
+  if (cart.length === 0) return;
+  toggleCart();
+  setTimeout(() => {
+    buildModalSummary();
+    document.getElementById('checkoutModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }, 350);
+}
+
+function closeCheckout() {
+  document.getElementById('checkoutModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function buildModalSummary() {
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+  let html = cart.map(i =>
+    `<div class="modal-order-item"><span>GTA VI ${i.edition} — ${i.platform}</span><span>${formatPrice(i.price)}</span></div>`
+  ).join('');
+  html += `<div class="modal-order-total"><span>TOTAL</span><span>${formatPrice(total)}</span></div>`;
+  document.getElementById('modalOrderSummary').innerHTML = html;
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.payment-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// =============================================
+// FORM FORMATTING
+// =============================================
+function formatCardNumber(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 16);
+  input.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatExpiry(input) {
+  let v = input.value.replace(/\D/g, '').slice(0, 4);
+  if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
+  input.value = v;
+}
+
+// =============================================
+// VALIDATION
+// =============================================
+function validateStripe() {
+  let valid = true;
+
+  const name = document.getElementById('cardName').value.trim();
+  setError('errCardName', !name, 'cardName');
+  if (!name) valid = false;
+
+  const num = document.getElementById('cardNumber').value.replace(/\s/g, '');
+  const numOk = /^\d{16}$/.test(num);
+  setError('errCardNumber', !numOk, 'cardNumber');
+  if (!numOk) valid = false;
+
+  const expiry = document.getElementById('cardExpiry').value;
+  const expiryOk = /^\d{2}\/\d{2}$/.test(expiry);
+  setError('errCardExpiry', !expiryOk, 'cardExpiry');
+  if (!expiryOk) valid = false;
+
+  const cvv = document.getElementById('cardCvv').value;
+  const cvvOk = /^\d{3,4}$/.test(cvv);
+  setError('errCardCvv', !cvvOk, 'cardCvv');
+  if (!cvvOk) valid = false;
+
+  const email = document.getElementById('cardEmail').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  setError('errCardEmail', !emailOk, 'cardEmail');
+  if (!emailOk) valid = false;
+
+  return valid;
+}
+
+function validatePaypal() {
+  const email = document.getElementById('paypalEmail').value.trim();
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  setError('errPaypalEmail', !ok, 'paypalEmail');
+  return ok;
+}
+
+function setError(errId, hasError, inputId) {
+  document.getElementById(errId).classList.toggle('visible', hasError);
+  document.getElementById(inputId).classList.toggle('error', hasError);
+}
+
+// =============================================
+// SUBMISSION
+// =============================================
+function submitStripe() {
+  if (!validateStripe()) {
+    showToast('Veuillez corriger les erreurs du formulaire', 'error');
+    return;
+  }
+  const btn = document.getElementById('stripeSubmitBtn');
+  btn.classList.add('loading');
+
+  // Simulate Stripe API call
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    closeCheckout();
+    showConfirmation('stripe', document.getElementById('cardEmail').value.trim());
+  }, 2000);
+}
+
+function submitPaypal() {
+  if (!validatePaypal()) {
+    showToast('Veuillez saisir un email PayPal valide', 'error');
+    return;
+  }
+  closeCheckout();
+  showToast('Redirection PayPal...', 'info');
+  setTimeout(() => {
+    showConfirmation('paypal', document.getElementById('paypalEmail').value.trim());
+  }, 1500);
+}
+
+// =============================================
+// CONFIRMATION
+// =============================================
+function showConfirmation(method, email) {
+  const orderNum = 'GTA-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+
+  document.getElementById('orderNumber').textContent = orderNum;
+
+  const detailsEl = document.getElementById('confirmationDetails');
+  let html = cart.map(i =>
+    `<div class="conf-row"><span>GTA VI ${i.edition} — ${i.platform}</span><strong>${formatPrice(i.price)}</strong></div>`
+  ).join('');
+  html += `<div class="conf-row"><span>Méthode de paiement</span><strong>${method === 'stripe' ? 'Carte bancaire' : 'PayPal'}</strong></div>`;
+  html += `<div class="conf-row"><span>Email</span><strong style="font-size:0.8rem">${email}</strong></div>`;
+  html += `<div class="conf-row"><span>Total payé</span><strong>${formatPrice(total)}</strong></div>`;
+  detailsEl.innerHTML = html;
+
+  // Clear cart
+  cart.length = 0;
+  updateCart();
+
+  document.getElementById('confirmationScreen').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmation() {
+  document.getElementById('confirmationScreen').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// =============================================
+// TOAST
+// =============================================
+function showToast(msg, type = 'success') {
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { toast.classList.add('show'); });
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function formatPrice(amount) {
+  return amount.toFixed(2).replace('.', ',') + ' €';
+}
+
+// =============================================
+// SCROLL ANIMATIONS
+// =============================================
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// =============================================
+// KEYBOARD SHORTCUTS
+// =============================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeCheckout();
+    const conf = document.getElementById('confirmationScreen');
+    if (conf.classList.contains('open')) closeConfirmation();
+    if (document.getElementById('cartSidebar').classList.contains('open')) toggleCart();
+  }
+});
+
+// Close modal on outside click
+document.getElementById('checkoutModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCheckout();
+});
+</script>
+</body>
+</html>
