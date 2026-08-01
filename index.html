@@ -62,6 +62,125 @@
     padding:0 1.75rem;
   }
 
+  /* ---------- REVEAL / ANIMATIONS ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity 0.9s ease, transform 0.9s ease;
+  }
+  .reveal.is-visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .reveal-stagger.is-visible > *{
+    transition-delay:calc(var(--i, 0) * 0.09s);
+  }
+
+  @keyframes heroFadeUp{
+    from{opacity:0; transform:translateY(22px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .hero-anim{
+    opacity:0;
+    animation:heroFadeUp 1s ease forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *, *::before, *::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.001ms !important;
+    }
+    .reveal{opacity:1; transform:none;}
+    .hero-anim{opacity:1;}
+  }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1.1rem 2rem;
+    background:rgba(247,243,236,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(169,138,78,0.35);
+    transform:translateY(-100%);
+    opacity:0;
+    transition:transform 0.5s ease, opacity 0.5s ease;
+  }
+  .nav.is-visible{
+    transform:translateY(0);
+    opacity:1;
+  }
+  .nav-mark{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.15rem;
+    letter-spacing:0.2em;
+    color:var(--bordeaux);
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .nav-links{
+    display:flex;
+    align-items:center;
+    gap:1.9rem;
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .nav-links a{
+    font-size:0.72rem;
+    letter-spacing:0.13em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:var(--encre);
+    position:relative;
+    padding-bottom:0.3rem;
+  }
+  .nav-links a::after{
+    content:"";
+    position:absolute;
+    left:0; bottom:0;
+    width:0;
+    height:1px;
+    background:var(--or);
+    transition:width 0.3s ease;
+  }
+  .nav-links a:hover::after,
+  .nav-links a.active::after{
+    width:100%;
+  }
+  .nav-links a.active{color:var(--bordeaux);}
+  .nav-cta{
+    border:1px solid var(--bordeaux);
+    color:var(--bordeaux) !important;
+    padding:0.55rem 1.2rem;
+  }
+  .nav-cta::after{display:none;}
+  .nav-cta:hover{
+    background:var(--bordeaux);
+    color:var(--porcelaine) !important;
+  }
+  @media (max-width: 760px){
+    .nav-links{gap:0; display:none;}
+    .nav-links li:last-child{
+      display:block;
+      margin-left:auto;
+    }
+    .nav-links{display:flex; justify-content:flex-end; width:100%;}
+    .nav-links li{display:none;}
+    .nav-links li:last-child{display:block;}
+    .nav{padding:0.9rem 1.1rem;}
+    .nav-mark{font-size:0.95rem; letter-spacing:0.12em;}
+    .nav-cta{padding:0.5rem 0.9rem; font-size:0.68rem;}
+  }
+
   /* ---------- HERO ---------- */
   .hero{
     position:relative;
@@ -90,6 +209,7 @@
     user-select:none;
     pointer-events:none;
     white-space:nowrap;
+    will-change:transform;
   }
   .hero-content{
     position:relative;
@@ -133,6 +253,38 @@
     text-transform:uppercase;
     padding:0.6rem 1.2rem;
     background:rgba(255,255,255,0.5);
+    transition:background 0.3s ease, transform 0.3s ease;
+  }
+  .badge:hover{
+    background:var(--bordeaux);
+    color:var(--porcelaine);
+    transform:translateY(-2px);
+  }
+
+  .scroll-cue{
+    position:absolute;
+    bottom:2.2rem;
+    left:50%;
+    transform:translateX(-50%);
+    width:1px;
+    height:46px;
+    background:linear-gradient(var(--or), transparent);
+    overflow:hidden;
+  }
+  .scroll-cue::after{
+    content:"";
+    position:absolute;
+    top:-46px;
+    left:0;
+    width:1px;
+    height:46px;
+    background:var(--bordeaux);
+    animation:scrollDrop 2.2s ease-in-out infinite;
+  }
+  @keyframes scrollDrop{
+    0%{top:-46px;}
+    60%{top:46px;}
+    100%{top:46px;}
   }
 
   .btn{
@@ -146,12 +298,13 @@
     text-transform:uppercase;
     padding:1.05rem 2.6rem;
     border:1px solid var(--bordeaux);
-    transition:background 0.25s ease, color 0.25s ease;
+    transition:background 0.25s ease, color 0.25s ease, transform 0.25s ease;
     cursor:pointer;
   }
   .btn:hover{
     background:var(--porcelaine);
     color:var(--bordeaux);
+    transform:translateY(-2px);
   }
   .btn:focus-visible{
     outline:2px solid var(--or);
@@ -191,8 +344,106 @@
     border:1px solid var(--or);
     background:var(--porcelaine);
     font-size:0.98rem;
+    transition:box-shadow 0.4s ease;
+  }
+  .highlight-box:hover{
+    box-shadow:0 0 0 1px var(--or) inset;
   }
   .highlight-box strong{color:var(--bordeaux);}
+
+  /* ---------- CHIFFRES CLES ---------- */
+  .chiffres{
+    background:var(--porcelaine);
+    border-top:1px solid rgba(169,138,78,0.35);
+    border-bottom:1px solid rgba(169,138,78,0.35);
+    padding:3.6rem 0;
+  }
+  .chiffres-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1.5rem;
+    text-align:center;
+  }
+  .chiffre .n{
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(2.4rem, 5vw, 3.4rem);
+    color:var(--bordeaux);
+    line-height:1;
+    display:block;
+  }
+  .chiffre .label{
+    margin-top:0.6rem;
+    font-size:0.74rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--vigne);
+  }
+
+  /* ---------- LE LIEU ---------- */
+  .lieu{background:var(--blanc);}
+  .lieu-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1.4rem;
+  }
+  .lieu-card{
+    position:relative;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    border:1px solid rgba(169,138,78,0.35);
+    display:flex;
+    align-items:flex-end;
+  }
+  .lieu-card .scene{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform 0.7s ease;
+  }
+  .lieu-card:hover .scene{
+    transform:scale(1.08);
+  }
+  .lieu-card svg{
+    width:44%;
+    height:44%;
+    stroke:rgba(247,243,236,0.9);
+    fill:none;
+    stroke-width:1.1;
+  }
+  .lieu-card .cap{
+    position:relative;
+    z-index:2;
+    width:100%;
+    padding:1.1rem 1rem;
+    background:linear-gradient(to top, rgba(36,31,27,0.72), transparent);
+    color:var(--porcelaine);
+  }
+  .lieu-card .cap .k{
+    display:block;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:1.15rem;
+    margin-bottom:0.15rem;
+  }
+  .lieu-card .cap .d{
+    font-size:0.74rem;
+    letter-spacing:0.04em;
+    color:rgba(247,243,236,0.85);
+  }
+  .scene-1{background:linear-gradient(160deg,#8a6a3d,#5A1F2B 70%);}
+  .scene-2{background:linear-gradient(160deg,#6B7355,#3d4230 75%);}
+  .scene-3{background:linear-gradient(160deg,#5A1F2B,#241F1B 80%);}
+  .scene-4{background:linear-gradient(160deg,#A98A4E,#5A1F2B 80%);}
+  .lieu-note{
+    text-align:center;
+    max-width:600px;
+    margin:2.2rem auto 0;
+    font-size:0.82rem;
+    color:var(--vigne);
+    font-style:italic;
+  }
 
   /* ---------- CARDS PRATIQUE ---------- */
   .cards{
@@ -205,6 +456,11 @@
     border:1px solid rgba(169,138,78,0.35);
     padding:2.2rem 1.6rem;
     text-align:center;
+    transition:transform 0.35s ease, border-color 0.35s ease;
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    border-color:var(--or);
   }
   .card .num{
     font-family:'Cormorant Garamond', serif;
@@ -258,6 +514,11 @@
     padding:0.85rem 0;
     border-bottom:1px dashed rgba(169,138,78,0.35);
     font-size:0.95rem;
+    transition:background 0.3s ease, padding-left 0.3s ease;
+  }
+  .timeline li:hover{
+    background:rgba(169,138,78,0.06);
+    padding-left:0.5rem;
   }
   .timeline li:last-child{border-bottom:none;}
   .timeline .time{
@@ -285,6 +546,11 @@
   .infos-card{
     border:1px solid rgba(247,243,236,0.28);
     padding:2rem 1.5rem;
+    transition:border-color 0.35s ease, transform 0.35s ease;
+  }
+  .infos-card:hover{
+    border-color:var(--or);
+    transform:translateY(-6px);
   }
   .infos-card h3{
     color:var(--porcelaine);
@@ -297,6 +563,59 @@
     font-size:0.92rem;
     margin:0;
     color:rgba(247,243,236,0.9);
+  }
+
+  /* ---------- FAQ ---------- */
+  .faq{background:var(--porcelaine);}
+  .faq-list{
+    max-width:760px;
+    margin:0 auto;
+  }
+  .faq-item{
+    border-bottom:1px solid rgba(169,138,78,0.35);
+  }
+  .faq-q{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    background:none;
+    border:none;
+    text-align:left;
+    cursor:pointer;
+    padding:1.4rem 0.2rem;
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.25rem;
+    color:var(--bordeaux);
+  }
+  .faq-q:focus-visible{
+    outline:2px solid var(--or);
+    outline-offset:3px;
+  }
+  .faq-icon{
+    flex:0 0 auto;
+    font-family:'Jost', sans-serif;
+    font-size:1.1rem;
+    color:var(--or);
+    transition:transform 0.35s ease;
+  }
+  .faq-item.open .faq-icon{
+    transform:rotate(45deg);
+  }
+  .faq-a{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height 0.45s ease, padding 0.45s ease;
+  }
+  .faq-a p{
+    margin:0 0 1.4rem;
+    font-size:0.95rem;
+    color:var(--encre);
+    max-width:640px;
+  }
+  .faq-item.open .faq-a{
+    padding-top:0;
   }
 
   /* ---------- FORM ---------- */
@@ -341,6 +660,10 @@
     border:1px solid rgba(90,31,43,0.25);
     padding:0.8rem 0.9rem;
     font-weight:300;
+    transition:border-color 0.3s ease, background 0.3s ease;
+  }
+  input:hover, select:hover, textarea:hover{
+    border-color:var(--or);
   }
   textarea{resize:vertical; min-height:100px;}
   input:focus-visible, select:focus-visible, textarea:focus-visible{
@@ -361,6 +684,10 @@
     color:var(--bordeaux);
     border-top:1px solid var(--or);
     padding-top:1.4rem;
+  }
+  #confirmMsg.show{
+    display:block;
+    animation:heroFadeUp 0.6s ease forwards;
   }
 
   /* ---------- FOOTER ---------- */
@@ -385,16 +712,54 @@
   footer a{
     color:var(--or);
     text-decoration:none;
+    border-bottom:1px solid transparent;
+    transition:border-color 0.3s ease;
+  }
+  footer a:hover{
+    border-color:var(--or);
+  }
+
+  /* ---------- BACK TO TOP ---------- */
+  .top-btn{
+    position:fixed;
+    right:1.6rem;
+    bottom:1.6rem;
+    width:2.7rem;
+    height:2.7rem;
+    border-radius:50%;
+    background:var(--bordeaux);
+    color:var(--porcelaine);
+    border:1px solid var(--bordeaux);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1rem;
+    cursor:pointer;
+    text-decoration:none;
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(10px);
+    transition:opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
+    z-index:99;
+  }
+  .top-btn.show{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
   }
 
   @media (max-width: 860px){
     .cards{grid-template-columns:repeat(2, 1fr);}
     .infos-grid{grid-template-columns:repeat(2, 1fr);}
+    .chiffres-grid{grid-template-columns:repeat(2, 1fr); row-gap:2rem;}
+    .lieu-grid{grid-template-columns:repeat(2, 1fr);}
     .form-row.two{grid-template-columns:1fr;}
   }
   @media (max-width: 560px){
     .cards{grid-template-columns:1fr;}
     .infos-grid{grid-template-columns:1fr;}
+    .lieu-grid{grid-template-columns:1fr;}
+    .lieu-card{aspect-ratio:16/10;}
     section{padding:4.2rem 0;}
     .form-wrap{padding:2.2rem 1.4rem;}
     .timeline .time{min-width:96px; font-size:1rem;}
@@ -403,31 +768,45 @@
 </head>
 <body>
 
+<!-- ================= NAV ================= -->
+<nav class="nav" id="siteNav">
+  <a href="#" class="nav-mark">XX · Beaune</a>
+  <ul class="nav-links">
+    <li><a href="#concept" data-nav="concept">Le concept</a></li>
+    <li><a href="#lieu" data-nav="lieu">Le lieu</a></li>
+    <li><a href="#programme" data-nav="programme">Programme</a></li>
+    <li><a href="#infos" data-nav="infos">Infos</a></li>
+    <li><a href="#faq" data-nav="faq">FAQ</a></li>
+    <li><a href="#rsvp" class="nav-cta" data-nav="rsvp">Réserver</a></li>
+  </ul>
+</nav>
+
 <!-- ================= HERO ================= -->
-<section class="hero">
-  <div class="hero-xx" aria-hidden="true">XX</div>
+<section class="hero" id="hero">
+  <div class="hero-xx" aria-hidden="true" id="heroXX">XX</div>
   <div class="hero-content">
-    <div class="eyebrow">Formation Wedding Planner &amp; Wedding Designer</div>
-    <h1>Week-end Atelier Devis à Beaune</h1>
-    <p class="sub">Apprendre à construire un devis de mariage sur un cas client réel — en avant-goût de la formation de novembre.</p>
-    <p class="meta"><strong>Du vendredi 7 au dimanche 9 août 2026</strong><br>Hôtel Henry II — Beaune Centre, 12-14 rue du Faubourg Saint-Nicolas, 21200 Beaune</p>
-    <div class="badges">
+    <div class="eyebrow hero-anim" style="animation-delay:0.05s">Formation Wedding Planner &amp; Wedding Designer</div>
+    <h1 class="hero-anim" style="animation-delay:0.18s">Week-end Atelier Devis à Beaune</h1>
+    <p class="sub hero-anim" style="animation-delay:0.32s">Apprendre à construire un devis de mariage sur un cas client réel — en avant-goût de la formation de novembre.</p>
+    <p class="meta hero-anim" style="animation-delay:0.46s"><strong>Du vendredi 7 au dimanche 9 août 2026</strong><br>Hôtel Henry II — Beaune Centre, 12-14 rue du Faubourg Saint-Nicolas, 21200 Beaune</p>
+    <div class="badges hero-anim" style="animation-delay:0.6s">
       <span class="badge">8 places disponibles</span>
       <span class="badge">Hébergement &amp; repas offerts</span>
     </div>
-    <a href="#rsvp" class="btn">Confirmer ma présence</a>
+    <a href="#rsvp" class="btn hero-anim" style="animation-delay:0.74s">Confirmer ma présence</a>
   </div>
+  <span class="scroll-cue" aria-hidden="true"></span>
 </section>
 
 <!-- ================= CONCEPT ================= -->
-<section class="concept">
+<section class="concept" id="concept">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head reveal">
       <div class="eyebrow">Le concept</div>
       <h2>Un vrai client, un vrai devis</h2>
       <hr class="filet">
     </div>
-    <div class="concept-text">
+    <div class="concept-text reveal">
       <p>Anne et Pierre Marchand, vignerons du Domaine des Coteaux Dorés à Beaune, fêteront leurs 20 ans de mariage — leurs Noces de Porcelaine — le samedi 7 novembre 2026. À trois mois de l'événement, ils souhaitent obtenir un devis.</p>
       <p>En petits groupes, encadrés par des mentors, vous allez construire le dossier complet : de la prise de brief le vendredi soir jusqu'au pitch du dimanche midi. Anne et Pierre écouteront chaque proposition et choisiront celle qui donnera vie à leur véritable fête de novembre.</p>
       <div class="highlight-box">
@@ -437,31 +816,105 @@
   </div>
 </section>
 
-<!-- ================= PRATIQUE (4 cartes) ================= -->
-<section class="pratique">
+<!-- ================= CHIFFRES CLES ================= -->
+<section class="chiffres">
   <div class="wrap">
-    <div class="section-head">
+    <div class="chiffres-grid">
+      <div class="chiffre reveal">
+        <span class="n" data-count="8">0</span>
+        <span class="label">Places seulement</span>
+      </div>
+      <div class="chiffre reveal">
+        <span class="n" data-count="3">0</span>
+        <span class="label">Jours d'immersion</span>
+      </div>
+      <div class="chiffre reveal">
+        <span class="n" data-count="1">0</span>
+        <span class="label">Vrai couple de clients</span>
+      </div>
+      <div class="chiffre reveal">
+        <span class="n" data-count="4">0</span>
+        <span class="label">Compétences clés</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LE LIEU ================= -->
+<section class="lieu" id="lieu">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Le lieu</div>
+      <h2>Beaune, au cœur de la Bourgogne viticole</h2>
+      <hr class="filet">
+    </div>
+    <div class="lieu-grid">
+      <div class="lieu-card reveal">
+        <div class="scene scene-1">
+          <svg viewBox="0 0 64 64"><path d="M8 56 V26 L32 10 L56 26 V56 Z"/><path d="M20 56 V38 H28 V56"/><path d="M36 56 V38 H44 V56"/><line x1="32" y1="10" x2="32" y2="4"/></svg>
+        </div>
+        <div class="cap">
+          <span class="k">Hôtel Henry II</span>
+          <span class="d">Votre point d'ancrage, en plein cœur historique de Beaune</span>
+        </div>
+      </div>
+      <div class="lieu-card reveal">
+        <div class="scene scene-2">
+          <svg viewBox="0 0 64 64"><line x1="10" y1="54" x2="10" y2="14"/><line x1="24" y1="54" x2="24" y2="14"/><line x1="38" y1="54" x2="38" y2="14"/><line x1="52" y1="54" x2="52" y2="14"/><path d="M6 20 H58 M6 32 H58 M6 44 H58"/></svg>
+        </div>
+        <div class="cap">
+          <span class="k">Le vignoble beaunois</span>
+          <span class="d">Le décor viticole du domaine d'Anne et Pierre</span>
+        </div>
+      </div>
+      <div class="lieu-card reveal">
+        <div class="scene scene-3">
+          <svg viewBox="0 0 64 64"><rect x="8" y="10" width="48" height="44"/><line x1="8" y1="26" x2="56" y2="26"/><line x1="8" y1="40" x2="56" y2="40"/><line x1="24" y1="10" x2="24" y2="54"/><line x1="40" y1="10" x2="40" y2="54"/></svg>
+        </div>
+        <div class="cap">
+          <span class="k">Ruelles &amp; remparts</span>
+          <span class="d">La vieille ville pavée, à quelques pas de l'atelier</span>
+        </div>
+      </div>
+      <div class="lieu-card reveal">
+        <div class="scene scene-4">
+          <svg viewBox="0 0 64 64"><rect x="10" y="18" width="44" height="28"/><line x1="10" y1="30" x2="54" y2="30"/><circle cx="20" cy="24" r="2"/><circle cx="32" cy="24" r="2"/><circle cx="44" cy="24" r="2"/></svg>
+        </div>
+        <div class="cap">
+          <span class="k">La salle de travail</span>
+          <span class="d">Là où naissent cahiers des charges, budgets et moodboards</span>
+        </div>
+      </div>
+    </div>
+    <p class="lieu-note reveal">Illustrations d'ambiance — vos repères visuels avant de découvrir le lieu en vrai le vendredi 7 août.</p>
+  </div>
+</section>
+
+<!-- ================= PRATIQUE (4 cartes) ================= -->
+<section class="pratique" id="pratique">
+  <div class="wrap">
+    <div class="section-head reveal">
       <div class="eyebrow">Au programme</div>
       <h2>Ce que vous allez pratiquer</h2>
       <hr class="filet">
     </div>
     <div class="cards">
-      <div class="card">
+      <div class="card reveal">
         <span class="num">01</span>
         <h3>Cahier des charges</h3>
         <p>Prise de brief avec de vrais clients, méthode d'écoute et rédaction structurée des besoins.</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="num">02</span>
         <h3>Budget &amp; rentabilité</h3>
         <p>Construction du budget prévisionnel, calcul du prix de vente et gestion des marges.</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="num">03</span>
         <h3>Proposition artistique</h3>
         <p>Moodboard, harmonies de couleurs et planches d'inspiration — prévoir un ordinateur portable.</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <span class="num">04</span>
         <h3>Argumentaire &amp; pitch</h3>
         <p>Défendre son devis à l'oral devant les clients, avec une posture professionnelle.</p>
@@ -471,15 +924,15 @@
 </section>
 
 <!-- ================= PROGRAMME ================= -->
-<section class="programme">
+<section class="programme" id="programme">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head reveal">
       <div class="eyebrow">Déroulé</div>
       <h2>Programme des 3 jours</h2>
       <hr class="filet">
     </div>
 
-    <div class="day-block">
+    <div class="day-block reveal">
       <div class="day-title">
         <h3>Vendredi 7 août</h3>
         <span>Brief client</span>
@@ -492,7 +945,7 @@
       </ul>
     </div>
 
-    <div class="day-block">
+    <div class="day-block reveal">
       <div class="day-title">
         <h3>Samedi 8 août</h3>
         <span>Construction du devis</span>
@@ -509,7 +962,7 @@
       </ul>
     </div>
 
-    <div class="day-block">
+    <div class="day-block reveal">
       <div class="day-title">
         <h3>Dimanche 9 août</h3>
         <span>Pitch &amp; délibération</span>
@@ -526,29 +979,96 @@
 </section>
 
 <!-- ================= INFOS PRATIQUES ================= -->
-<section class="infos">
+<section class="infos" id="infos">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head reveal">
       <div class="eyebrow">Informations pratiques</div>
       <h2>Tout est prévu</h2>
       <hr class="filet">
     </div>
     <div class="infos-grid">
-      <div class="infos-card">
+      <div class="infos-card reveal">
         <h3>Hébergement</h3>
         <p>Votre chambre à l'Hôtel Henry II est réservée et offerte du vendredi au dimanche.</p>
       </div>
-      <div class="infos-card">
+      <div class="infos-card reveal">
         <h3>Repas</h3>
         <p>Tous les repas sont fournis, du dîner du vendredi au petit-déjeuner du dimanche. Merci de nous indiquer vos allergies.</p>
       </div>
-      <div class="infos-card">
+      <div class="infos-card reveal">
         <h3>Matériel</h3>
         <p>Les supports d'atelier sont fournis. Apportez si possible un ordinateur portable pour le moodboard et le devis.</p>
       </div>
-      <div class="infos-card">
+      <div class="infos-card reveal">
         <h3>Accès</h3>
         <p>Gare de Beaune à 10 min à pied, A6 sortie 24.1, parking à proximité. Seul le trajet reste à votre charge.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Questions fréquentes</div>
+      <h2>Encore quelques questions ?</h2>
+      <hr class="filet">
+    </div>
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Dois-je payer quelque chose sur place ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Non. La chambre, tous les repas et le matériel d'atelier sont offerts. Seul le trajet aller-retour jusqu'à Beaune reste à votre charge.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Dois-je déjà être inscrit(e) à la formation de novembre ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Non. Ce week-end accueille aussi bien les personnes déjà inscrites que celles encore en réflexion, en activité ou en reconversion — le formulaire vous permet d'indiquer votre situation.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Que dois-je apporter ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Une tenue confortable pour le week-end, si possible un ordinateur portable pour le moodboard et le devis, et surtout votre curiosité — le reste est fourni sur place.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Comment se rendre à l'Hôtel Henry II ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>La gare de Beaune est à 10 minutes à pied de l'hôtel. En voiture, prenez la sortie 24.1 sur l'A6 — un parking se trouve à proximité immédiate.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Puis-je venir seulement une partie du week-end ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Le format est pensé comme un parcours continu, du brief du vendredi soir au pitch du dimanche. Une présence complète est vivement recommandée pour vivre toute la construction du devis.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q" aria-expanded="false">
+          <span>Je ne peux plus venir après avoir confirmé, que faire ?</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div class="faq-a">
+          <p>Prévenez-nous au plus vite à avinelucas14@gmail.com afin de libérer votre place pour une autre personne intéressée — il n'y en a que huit.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -557,12 +1077,12 @@
 <!-- ================= RSVP FORM ================= -->
 <section class="rsvp" id="rsvp">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head reveal">
       <div class="eyebrow">Confirmation</div>
       <h2>Réservez votre place</h2>
       <hr class="filet">
     </div>
-    <div class="form-wrap">
+    <div class="form-wrap reveal">
       <p class="form-note">8 places seulement — réponse souhaitée avant le mardi 4 août 2026</p>
       <form id="rsvpForm">
         <div class="form-row two">
@@ -658,7 +1178,146 @@
   <p>Contact : <a href="mailto:avinelucas14@gmail.com">avinelucas14@gmail.com</a></p>
 </footer>
 
+<a href="#hero" class="top-btn" id="topBtn" aria-label="Retour en haut">↑</a>
+
 <script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Nav show/hide + active section */
+  var nav = document.getElementById('siteNav');
+  var hero = document.getElementById('hero');
+  var navLinks = document.querySelectorAll('.nav-links a[data-nav]');
+  var sections = ['concept','lieu','programme','infos','faq','rsvp']
+    .map(function(id){ return document.getElementById(id); })
+    .filter(Boolean);
+
+  var heroObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        nav.classList.remove('is-visible');
+      } else {
+        nav.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  heroObserver.observe(hero);
+
+  var sectionObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      var id = entry.target.id;
+      var link = document.querySelector('.nav-links a[data-nav="' + id + '"]');
+      if(!link) return;
+      if(entry.isIntersecting){
+        navLinks.forEach(function(l){ l.classList.remove('active'); });
+        link.classList.add('active');
+      }
+    });
+  }, { threshold: 0, rootMargin: '-45% 0px -50% 0px' });
+  sections.forEach(function(s){ sectionObserver.observe(s); });
+
+  /* Back to top button */
+  var topBtn = document.getElementById('topBtn');
+  var topObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      topBtn.classList.toggle('show', !entry.isIntersecting);
+    });
+  }, { threshold: 0 });
+  topObserver.observe(hero);
+
+  /* Reveal on scroll */
+  var revealEls = document.querySelectorAll('.reveal');
+  if(reduceMotion){
+    revealEls.forEach(function(el){ el.classList.add('is-visible'); });
+  } else {
+    var revealObserver = new IntersectionObserver(function(entries, obs){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function(el){ revealObserver.observe(el); });
+  }
+
+  /* Animated counters */
+  var counters = document.querySelectorAll('.chiffre .n');
+  var countersDone = false;
+  function runCounters(){
+    if(countersDone) return;
+    countersDone = true;
+    counters.forEach(function(el){
+      var target = parseInt(el.getAttribute('data-count'), 10) || 0;
+      if(reduceMotion){
+        el.textContent = target;
+        return;
+      }
+      var start = 0;
+      var duration = 900;
+      var startTime = null;
+      function step(ts){
+        if(startTime === null) startTime = ts;
+        var progress = Math.min((ts - startTime) / duration, 1);
+        el.textContent = Math.floor(progress * (target - start) + start);
+        if(progress < 1){
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = target;
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  var chiffresSection = document.querySelector('.chiffres');
+  if(chiffresSection){
+    var countObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          runCounters();
+        }
+      });
+    }, { threshold: 0.4 });
+    countObserver.observe(chiffresSection);
+  }
+
+  /* Subtle parallax on hero XX */
+  var heroXX = document.getElementById('heroXX');
+  if(!reduceMotion && heroXX){
+    window.addEventListener('scroll', function(){
+      var y = window.scrollY;
+      if(y < window.innerHeight){
+        heroXX.style.transform = 'translate(-50%, calc(-52% + ' + (y * 0.08) + 'px))';
+      }
+    }, { passive: true });
+  }
+
+  /* FAQ accordion */
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    var btn = item.querySelector('.faq-q');
+    var answer = item.querySelector('.faq-a');
+    btn.addEventListener('click', function(){
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(openItem){
+        if(openItem !== item){
+          openItem.classList.remove('open');
+          openItem.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+          openItem.querySelector('.faq-a').style.maxHeight = null;
+        }
+      });
+      if(isOpen){
+        item.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        answer.style.maxHeight = null;
+      } else {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+      }
+    });
+  });
+})();
+
 document.getElementById('rsvpForm').addEventListener('submit', function(e){
   e.preventDefault();
 
@@ -698,7 +1357,7 @@ document.getElementById('rsvpForm').addEventListener('submit', function(e){
 
   window.location.href = mailto;
 
-  document.getElementById('confirmMsg').style.display = 'block';
+  document.getElementById('confirmMsg').classList.add('show');
 });
 </script>
 
