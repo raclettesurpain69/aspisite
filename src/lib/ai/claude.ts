@@ -29,8 +29,17 @@ const SUMMARY_TOOL = {
       extraFields: { type: "object", additionalProperties: { type: "string" } },
       recommendedAction: { type: "string" },
       summaryText: { type: "string" },
+      qualificationScore: { type: "integer", minimum: 0, maximum: 100 },
+      qualificationReason: { type: "string" },
     },
-    required: ["urgency", "recommendedAction", "summaryText", "extraFields"],
+    required: [
+      "urgency",
+      "recommendedAction",
+      "summaryText",
+      "extraFields",
+      "qualificationScore",
+      "qualificationReason",
+    ],
   },
 };
 
@@ -91,7 +100,13 @@ export class ClaudeProvider implements AIProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 1024,
-      system: `${buildSystemPrompt(context)}\n\nL'appel est termine. Extrait toutes les informations recueillies via l'outil record_call_summary.`,
+      system: `${buildSystemPrompt(context)}\n\nL'appel est termine. Extrait toutes les informations recueillies via l'outil record_call_summary.
+Attribue egalement un score de qualification du prospect entre 0 et 100 (qualificationScore), base sur :
+- l'urgence du besoin (un besoin urgent qualifie mieux) ;
+- la completude des informations recueillies (nom, telephone, adresse, motif) ;
+- l'intention d'achat percue (demande precise et concrete vs simple curiosite) ;
+- la disponibilite communiquee par le client.
+Justifie ce score en une phrase courte (qualificationReason).`,
       messages: [
         ...toAnthropicMessages(history),
         { role: "user", content: "Enregistre le resume de cet appel maintenant." },

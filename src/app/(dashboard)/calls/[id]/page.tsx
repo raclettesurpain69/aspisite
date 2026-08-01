@@ -6,6 +6,7 @@ import { formatDuration } from "@/lib/utils";
 import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
 import { FakeAudioPlayer } from "@/components/calls/fake-audio-player";
+import { QualificationScore } from "@/components/calls/qualification-score";
 import {
   Card,
   CardContent,
@@ -133,6 +134,18 @@ export default async function CallDetailPage({
           </CardHeader>
           <CardContent className="pb-6 text-sm whitespace-pre-wrap text-muted-foreground">
             {call.summary_text ?? "Aucun resume disponible."}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Score de qualification prospect</CardTitle>
+          </CardHeader>
+          <CardContent className="pb-6">
+            <QualificationScore
+              score={call.qualification_score}
+              reason={call.qualification_reason}
+            />
           </CardContent>
         </Card>
       </main>

@@ -194,6 +194,8 @@ export type Database = {
           extra_fields: Json;
           recommended_action: string | null;
           summary_text: string | null;
+          qualification_score: number | null;
+          qualification_reason: string | null;
           conversation: Json;
           is_simulated: boolean;
           created_at: string;
@@ -218,6 +220,8 @@ export type Database = {
           extra_fields?: Json;
           recommended_action?: string | null;
           summary_text?: string | null;
+          qualification_score?: number | null;
+          qualification_reason?: string | null;
           conversation?: Json;
           is_simulated?: boolean;
           created_at?: string;

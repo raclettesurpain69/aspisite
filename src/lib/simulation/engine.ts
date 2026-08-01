@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { getAIProvider } from "@/lib/ai";
 import type { CompanyAIContext, ConversationMessage } from "@/lib/ai/types";
 import { getScenarioById, type ScenarioId } from "@/lib/ai/scenarios";
@@ -14,6 +16,7 @@ const CLOSING_MESSAGE =
   "Merci pour ces informations. L'entreprise revient vers vous rapidement. Bonne journee !";
 const TECHNICAL_ISSUE_MESSAGE =
   "Je rencontre une difficulte technique. L'entreprise vous rappellera des que possible.";
+const ACTIVE_STATUSES = new Set(["incoming", "answered"]);
 
 /**
  * Reutilise le meme AIProvider/CompanyAIContext que le pipeline Twilio
@@ -47,24 +50,39 @@ export type SimulationSummary = {
   reason: string | null;
   summaryText: string | null;
   recommendedAction: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  qualificationScore: number | null;
+  qualificationReason: string | null;
+  customerId: string | null;
+  isNewCustomer: boolean;
+  callHistoryCount: number;
 };
 
 async function finalizeSimulation(params: {
   callId: string;
   companyId: string;
+  fromNumber: string;
   conversation: ConversationMessage[];
   context: CompanyAIContext;
   testMode: boolean;
 }): Promise<SimulationSummary> {
-  const { callId, companyId, conversation, context, testMode } = params;
+  const { callId, companyId, fromNumber, conversation, context, testMode } = params;
 
-  await finalizeCall({
+  const hasCustomerSpeech = conversation.some((turn) => turn.role === "customer");
+  const status = hasCustomerSpeech ? "completed" : "voicemail";
+
+  const result = await finalizeCall({
     callId,
     companyId,
-    fromNumber: "Simulation",
+    fromNumber,
     conversation,
     context,
-    status: "completed",
+    status,
     testMode,
   });
 
@@ -75,19 +93,35 @@ async function finalizeSimulation(params: {
     message: "Simulation terminee, resume genere.",
   });
 
-  const supabase = createServiceRoleClient();
-  const { data } = await supabase
-    .from("calls")
-    .select("status, urgency, reason, summary_text, recommended_action")
-    .eq("id", callId)
-    .single();
+  let callHistoryCount = 0;
+  if (result.customerId) {
+    const supabase = createServiceRoleClient();
+    const { count } = await supabase
+      .from("calls")
+      .select("id", { count: "exact", head: true })
+      .eq("customer_id", result.customerId);
+    callHistoryCount = count ?? 0;
+  }
+
+  const summary = result.summary;
 
   return {
-    status: data?.status ?? "completed",
-    urgency: data?.urgency ?? "normal",
-    reason: data?.reason ?? null,
-    summaryText: data?.summary_text ?? null,
-    recommendedAction: data?.recommended_action ?? null,
+    status,
+    urgency: summary?.urgency ?? "normal",
+    reason: summary?.reason ?? null,
+    summaryText: summary?.summaryText ?? null,
+    recommendedAction: summary?.recommendedAction ?? null,
+    firstName: summary?.firstName ?? null,
+    lastName: summary?.lastName ?? null,
+    phoneNumber: summary?.phoneNumber ?? null,
+    email: summary?.email ?? null,
+    address: summary?.address ?? null,
+    city: summary?.city ?? null,
+    qualificationScore: summary?.qualificationScore ?? null,
+    qualificationReason: summary?.qualificationReason ?? null,
+    customerId: result.customerId,
+    isNewCustomer: result.isNewCustomer,
+    callHistoryCount,
   };
 }
 
@@ -107,11 +141,17 @@ export async function startSimulation(
     .eq("is_primary", true)
     .maybeSingle();
 
+  // Identifiant unique par session : si le client simule ne communique pas
+  // de numero pendant la conversation, chaque simulation cree malgre tout
+  // un client distinct (plutot que de reutiliser toujours la meme fiche
+  // "Simulation"), pour une demo repetable et credible.
+  const simulatedFromNumber = `Simulation-${randomUUID().slice(0, 8)}`;
+
   const { data: call, error } = await supabase
     .from("calls")
     .insert({
       company_id: companyId,
-      from_number: "Simulation",
+      from_number: simulatedFromNumber,
       to_number: primaryNumber?.phone_number ?? "Simulation",
       status: "answered",
       is_simulated: true,
@@ -146,14 +186,14 @@ export async function continueSimulation(params: {
 
   const { data: call } = await supabase
     .from("calls")
-    .select("id, company_id, conversation, is_simulated, status")
+    .select("id, company_id, from_number, conversation, is_simulated, status")
     .eq("id", callId)
     .maybeSingle();
 
   if (!call || call.company_id !== companyId || !call.is_simulated) {
     throw new Error("Simulation introuvable.");
   }
-  if (["completed", "voicemail", "failed"].includes(call.status)) {
+  if (!ACTIVE_STATUSES.has(call.status)) {
     throw new Error("Cette simulation est deja terminee.");
   }
 
@@ -175,7 +215,14 @@ export async function continueSimulation(params: {
   if (customerTurns >= MAX_CUSTOMER_TURNS) {
     conversation.push({ role: "assistant", content: CLOSING_MESSAGE });
     await supabase.from("calls").update({ conversation: conversationToJson(conversation) }).eq("id", callId);
-    const summary = await finalizeSimulation({ callId, companyId, conversation, context, testMode });
+    const summary = await finalizeSimulation({
+      callId,
+      companyId,
+      fromNumber: call.from_number,
+      conversation,
+      context,
+      testMode,
+    });
     return { assistantMessage: CLOSING_MESSAGE, done: true, summary };
   }
 
@@ -204,7 +251,14 @@ export async function continueSimulation(params: {
     });
     conversation.push({ role: "assistant", content: TECHNICAL_ISSUE_MESSAGE });
     await supabase.from("calls").update({ conversation: conversationToJson(conversation) }).eq("id", callId);
-    const summary = await finalizeSimulation({ callId, companyId, conversation, context, testMode });
+    const summary = await finalizeSimulation({
+      callId,
+      companyId,
+      fromNumber: call.from_number,
+      conversation,
+      context,
+      testMode,
+    });
     return { assistantMessage: TECHNICAL_ISSUE_MESSAGE, done: true, summary };
   }
 }
@@ -219,14 +273,14 @@ export async function endSimulationNow(params: {
 
   const { data: call } = await supabase
     .from("calls")
-    .select("id, company_id, conversation, is_simulated, status")
+    .select("id, company_id, from_number, conversation, is_simulated, status")
     .eq("id", callId)
     .maybeSingle();
 
   if (!call || call.company_id !== companyId || !call.is_simulated) {
     throw new Error("Simulation introuvable.");
   }
-  if (["completed", "voicemail", "failed"].includes(call.status)) {
+  if (!ACTIVE_STATUSES.has(call.status)) {
     throw new Error("Cette simulation est deja terminee.");
   }
 
@@ -234,5 +288,12 @@ export async function endSimulationNow(params: {
   const context = await buildContext(companyId, scenarioId);
   const conversation = (call.conversation as ConversationMessage[] | null) ?? [];
 
-  return finalizeSimulation({ callId, companyId, conversation, context, testMode });
+  return finalizeSimulation({
+    callId,
+    companyId,
+    fromNumber: call.from_number,
+    conversation,
+    context,
+    testMode,
+  });
 }

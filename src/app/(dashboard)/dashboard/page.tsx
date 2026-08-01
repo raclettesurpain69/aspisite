@@ -1,8 +1,8 @@
-import { PhoneCall, UserPlus, AlertTriangle, Timer } from "lucide-react";
+import { PhoneCall, UserPlus, AlertTriangle, Timer, Sparkles, Clock } from "lucide-react";
 
 import { getCurrentUserCompany } from "@/lib/data/company";
-import { getDashboardStats } from "@/lib/data/dashboard";
-import { formatDuration } from "@/lib/utils";
+import { getDashboardStats, getAICallsSummary } from "@/lib/data/dashboard";
+import { formatDuration, formatMinutes } from "@/lib/utils";
 import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,6 +43,7 @@ export default async function DashboardPage() {
   }
 
   const stats = await getDashboardStats(company.id);
+  const aiCallsSummary = await getAICallsSummary(company.id);
 
   const statCards = [
     { label: "Appels IA aujourd'hui", value: stats.callsToday, icon: PhoneCall },
@@ -75,6 +76,35 @@ export default async function DashboardPage() {
             );
           })}
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="size-4" />
+              Appels IA traites
+            </CardTitle>
+            <CardDescription>Depuis la mise en service, appels reels et simules.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 pb-6 sm:grid-cols-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Appels reels (Twilio)</p>
+              <p className="text-2xl font-semibold">{aiCallsSummary.realCalls}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Appels simules (demo)</p>
+              <p className="text-2xl font-semibold">{aiCallsSummary.simulatedCalls}</p>
+            </div>
+            <div>
+              <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Clock className="size-3.5" />
+                Temps economise estime
+              </p>
+              <p className="text-2xl font-semibold">
+                {formatMinutes(aiCallsSummary.estimatedMinutesSaved)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

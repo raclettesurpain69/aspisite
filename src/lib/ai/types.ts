@@ -27,6 +27,15 @@ export interface CallSummary {
   extraFields: Record<string, string>;
   recommendedAction: string;
   summaryText: string;
+  /**
+   * Score de qualification du prospect (0-100), base sur l'urgence, la
+   * completude des informations recueillies, l'intention d'achat percue
+   * et la disponibilite communiquee. Utilise d'abord par le mode
+   * simulation, mais porte par CallSummary pour etre disponible sans
+   * changement sur les vrais appels Twilio des que souhaite.
+   */
+  qualificationScore: number;
+  qualificationReason: string;
 }
 
 /**

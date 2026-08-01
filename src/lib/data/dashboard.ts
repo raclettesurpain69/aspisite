@@ -47,6 +47,7 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
         .from("customers")
         .select("id", { count: "exact", head: true })
         .eq("company_id", companyId)
+        .not("phone_number", "ilike", "Simulation%")
         .gte("created_at", since),
       supabase
         .from("calls")
@@ -105,5 +106,42 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
     urgentToday: urgentTodayResult.count ?? 0,
     averageDurationSeconds,
     recentCalls,
+  };
+}
+
+export type AICallsSummary = {
+  realCalls: number;
+  simulatedCalls: number;
+  estimatedMinutesSaved: number;
+};
+
+/**
+ * Estimation illustrative, pas une mesure : on suppose qu'un appel pris en
+ * charge par l'IA aurait sinon demande ce temps a l'entreprise (decrocher,
+ * qualifier, noter les coordonnees). A ajuster si besoin, ce n'est pas une
+ * donnee mesuree.
+ */
+const ESTIMATED_MINUTES_SAVED_PER_CALL = 5;
+
+export async function getAICallsSummary(companyId: string): Promise<AICallsSummary> {
+  const supabase = await createClient();
+
+  const [{ count: realCalls }, { count: simulatedCalls }] = await Promise.all([
+    supabase
+      .from("calls")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .eq("is_simulated", false),
+    supabase
+      .from("calls")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .eq("is_simulated", true),
+  ]);
+
+  return {
+    realCalls: realCalls ?? 0,
+    simulatedCalls: simulatedCalls ?? 0,
+    estimatedMinutesSaved: (realCalls ?? 0) * ESTIMATED_MINUTES_SAVED_PER_CALL,
   };
 }

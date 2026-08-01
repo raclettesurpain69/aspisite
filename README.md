@@ -303,9 +303,10 @@ refonte de la logique IA/finalisation, deja partagee.
   existant des "questions specifiques au metier") et suggere un premier
   message client pour demarrer rapidement.
 - **Moteur** (`src/lib/simulation/engine.ts`) : `startSimulation` cree la
-  ligne `calls` (`is_simulated = true`, `from_number`/`to_number` =
-  `"Simulation"` ou le numero principal de l'entreprise s'il existe) ;
-  `continueSimulation` boucle la conversation (meme limite
+  ligne `calls` (`is_simulated = true`, `from_number` genere de facon
+  unique par session, `to_number` = le numero principal de l'entreprise
+  s'il existe sinon `"Simulation"`) ; `continueSimulation` boucle la
+  conversation (meme limite
   `MAX_CUSTOMER_TURNS` que le pipeline reel) ; `endSimulationNow` permet de
   clore manuellement. La finalisation appelle `finalizeCall()` sans
   modification.
@@ -321,16 +322,57 @@ refonte de la logique IA/finalisation, deja partagee.
   vrai enregistrement Twilio sans changement de schema.
 - **Exclu des metriques reelles** : les simulations ne comptent ni dans
   les statistiques du tableau de bord (appels du jour, urgences, duree
-  moyenne) ni dans le quota mensuel du plan (`get_company_usage()`) —
-  seul le compteur "nouveaux clients" du dashboard peut ponctuellement
-  inclure un client "Simulation" (limitation mineure acceptee : la table
-  `customers` n'a pas de marqueur de provenance).
+  moyenne, nouveaux clients) ni dans le quota mensuel du plan
+  (`get_company_usage()`). Le filtre "nouveaux clients" exclut les
+  numeros `Simulation-...` (la table `customers` n'a pas de colonne
+  `is_simulated` : ce prefixe de `phone_number` sert de marqueur) ;
+  limitation residuelle acceptee, si le client simule au fil de la
+  conversation communique un numero qui ressemble a un vrai numero, il
+  sera compte comme un nouveau client reel.
 - **Logs** : `simulation.started`, `simulation.message` (client et
   assistant, differencies par `metadata.role`), `simulation.completed`,
   visibles dans le Journal systeme comme les vrais appels.
 - **Champ Email** : ajoute a `customers` et `CallSummary` (absent du
   schema initial), car demande par le mode simulation — desormais
   collecte aussi sur les vrais appels quand le client le communique.
+- **Identifiant unique par session** : `from_number` est genere
+  aleatoirement (`Simulation-xxxxxxxx`) a chaque simulation plutot que
+  fixe, pour que chaque demo cree reellement un nouveau client (sauf si
+  le client simule communique un numero, qui prend alors le dessus) —
+  important pour rejouer la demo plusieurs fois de facon credible.
+
+### Experience de demonstration commerciale
+
+- **Pendant l'appel** (`/test-call`) : bandeau "Appel en cours" (pastille
+  animee), duree ecoulee, nombre de questions posees, indicateur de frappe
+  pendant que l'IA repond, et une progression de collecte des informations
+  (`src/lib/simulation/progress.ts`) — **estimation heuristique par
+  mots-cles**, affichee en direct pour le cote visuel ; l'extraction qui
+  fait foi reste celle de Claude a la finalisation (`CallSummary`).
+- **Fiche resultat** (`CallResultCard`) : synthese "Appel termine" (client,
+  telephone, email, motif, urgence, resume, action recommandee).
+- **Score de qualification prospect** (`CallSummary.qualificationScore`,
+  0-100, `calls.qualification_score`) : genere par Claude a partir de
+  l'urgence, la completude des informations, l'intention d'achat percue et
+  la disponibilite. Colonne partagee entre simulation et vrais appels
+  (`finalizeCall()` la persiste dans les deux cas) : aucune migration
+  supplementaire ne sera necessaire pour l'exploiter sur de vrais appels.
+- **Vue "Client cree"** (`CustomerCreatedCard`) : `finalizeCall()` retourne
+  desormais `{ customerId, isNewCustomer, summary }` (au lieu de `void`,
+  sans casser les appelants existants qui ignorent deja la valeur de
+  retour) pour afficher "Nouveau client ajoute" vs "Client existant mis a
+  jour", avec l'historique des appels de ce client.
+- **Dashboard** : carte "Appels IA traites" (`getAICallsSummary()`) avec
+  le nombre d'appels reels et simules affiches separement, plus un temps
+  economise estime (**hypothese illustrative de 5 min/appel reel, pas une
+  mesure**, voir le commentaire dans `src/lib/data/dashboard.ts`).
+- **Page commerciale publique** (`/demo`, ajoutee aux routes publiques du
+  middleware) : argumentaire produit + bouton "Tester une conversation IA"
+  vers `/test-call`. **Point d'attention** : `/test-call` reste protegee
+  par l'authentification (comme le reste du dashboard) — un visiteur non
+  connecte sera redirige vers `/login` en cliquant le bouton. Rendre
+  `/test-call` public serait une decision separee (cout des appels
+  Claude/ElevenLabs expose a des visiteurs anonymes), non prise ici.
 
 ## Multi-tenant et securite
 

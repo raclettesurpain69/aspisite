@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
-import { Sparkles, Send, PhoneOff } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Sparkles, Send, PhoneOff, Phone } from "lucide-react";
 
 import { CALL_SCENARIOS, type ScenarioId } from "@/lib/ai/scenarios";
 import type { ConversationMessage } from "@/lib/ai/types";
+import { estimateCollectedFields } from "@/lib/simulation/progress";
 import {
   startSimulationAction,
   sendSimulationMessageAction,
   endSimulationAction,
 } from "@/lib/actions/simulation";
 import type { SimulationSummary } from "@/lib/simulation/engine";
+import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ConversationThread } from "@/components/test-call/conversation-thread";
+import { CollectionProgress } from "@/components/test-call/collection-progress";
+import { CallResultCard } from "@/components/test-call/call-result-card";
+import { CustomerCreatedCard } from "@/components/test-call/customer-created-card";
 import {
   Card,
   CardContent,
@@ -23,13 +28,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-const URGENCY_LABELS: Record<string, string> = {
-  low: "Faible",
-  normal: "Normale",
-  high: "Elevee",
-  critical: "Critique",
-};
 
 type Phase = "idle" | "running" | "done";
 
@@ -42,8 +40,25 @@ export function SimulationChat() {
   const [summary, setSummary] = useState<SimulationSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const startedAtRef = useRef<number | null>(null);
 
   const scenario = CALL_SCENARIOS.find((s) => s.id === scenarioId) ?? CALL_SCENARIOS[0];
+  const questionsAsked = Math.max(0, conversation.filter((t) => t.role === "assistant").length - 1);
+  const collectedFields = estimateCollectedFields(conversation);
+
+  useEffect(() => {
+    if (phase !== "running") return;
+
+    const interval = setInterval(() => {
+      if (startedAtRef.current) {
+        setElapsedSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000));
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [phase]);
 
   function handleStart() {
     setError(null);
@@ -56,6 +71,8 @@ export function SimulationChat() {
       setCallId(result.callId);
       setConversation(result.conversation);
       setInputValue(scenario.suggestedOpeningMessage);
+      startedAtRef.current = Date.now();
+      setElapsedSeconds(0);
       setPhase("running");
     });
   }
@@ -102,6 +119,8 @@ export function SimulationChat() {
     setInputValue("");
     setSummary(null);
     setError(null);
+    setElapsedSeconds(0);
+    startedAtRef.current = null;
   }
 
   return (
@@ -128,6 +147,30 @@ export function SimulationChat() {
           ))}
           <p className="pt-2 text-sm text-muted-foreground">{scenario.description}</p>
         </CardContent>
+
+        {phase === "running" && (
+          <CardContent className="space-y-4 border-t pt-6 pb-6">
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-success" />
+              </span>
+              <span className="text-sm font-medium">Appel en cours...</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-muted-foreground">Duree</p>
+                <p className="font-medium">{formatDuration(elapsedSeconds)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Questions posees</p>
+                <p className="font-medium">{questionsAsked}</p>
+              </div>
+            </div>
+            <CollectionProgress collected={collectedFields} />
+          </CardContent>
+        )}
+
         {phase === "idle" && (
           <CardFooter>
             <Button className="w-full" onClick={handleStart} disabled={isPending}>
@@ -145,108 +188,75 @@ export function SimulationChat() {
         )}
       </Card>
 
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Conversation</CardTitle>
-          <CardDescription>
-            {phase === "idle"
-              ? "Lancez une simulation pour voir l'assistant repondre comme lors d'un vrai appel."
-              : `Scenario : ${scenario.label}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 pb-6">
-          {error && (
-            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-          )}
+      <div className="space-y-6 lg:col-span-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+            <div>
+              <CardTitle>Conversation</CardTitle>
+              <CardDescription>
+                {phase === "idle"
+                  ? "Lancez une simulation pour voir l'assistant repondre comme lors d'un vrai appel."
+                  : `Scenario : ${scenario.label}`}
+              </CardDescription>
+            </div>
+            {phase === "running" && (
+              <Badge variant="secondary" className="gap-1">
+                <Phone className="size-3" />
+                En cours
+              </Badge>
+            )}
+            {phase === "done" && <Badge variant="success">Termine</Badge>}
+          </CardHeader>
+          <CardContent className="space-y-4 pb-6">
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            )}
 
-          {conversation.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune conversation pour le moment.</p>
-          ) : (
-            <ul className="space-y-3">
-              {conversation.map((turn, index) => (
-                <li
-                  key={index}
-                  className={turn.role === "assistant" ? "flex justify-start" : "flex justify-end"}
-                >
-                  <div
-                    className={
-                      turn.role === "assistant"
-                        ? "max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm"
-                        : "max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
+            <ConversationThread
+              conversation={conversation}
+              isAssistantTyping={isPending && phase === "running"}
+            />
+          </CardContent>
+          {phase === "running" && (
+            <CardFooter className="flex-col gap-2 border-t pt-6">
+              <div className="flex w-full gap-2">
+                <Input
+                  value={inputValue}
+                  onChange={(event) => setInputValue(event.target.value)}
+                  placeholder="Reponse du client..."
+                  disabled={isPending}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleSend();
                     }
-                  >
-                    <p className="mb-1 text-xs font-medium opacity-70">
-                      {turn.role === "assistant" ? "Assistant IA" : "Client (vous)"}
-                    </p>
-                    {turn.content}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {phase === "done" && summary && (
-            <div className="space-y-2 rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">Resume de l&apos;appel</p>
-                <Badge
-                  variant={
-                    summary.urgency === "critical" || summary.urgency === "high"
-                      ? "destructive"
-                      : "secondary"
-                  }
-                >
-                  {URGENCY_LABELS[summary.urgency] ?? summary.urgency}
-                </Badge>
+                  }}
+                />
+                <Button onClick={handleSend} disabled={isPending || !inputValue.trim()}>
+                  <Send />
+                </Button>
               </div>
-              <p className="text-sm text-muted-foreground">{summary.reason ?? "Motif non precise"}</p>
-              <p className="text-sm whitespace-pre-wrap">{summary.summaryText}</p>
-              {summary.recommendedAction && (
-                <p className="text-sm">
-                  <span className="font-medium">Action recommandee : </span>
-                  {summary.recommendedAction}
-                </p>
-              )}
-              {callId && (
-                <Link href={`/calls/${callId}`} className="text-sm text-primary hover:underline">
-                  Voir la fiche complete dans l&apos;historique des appels
-                </Link>
-              )}
-            </div>
-          )}
-        </CardContent>
-        {phase === "running" && (
-          <CardFooter className="flex-col gap-2 border-t pt-6">
-            <div className="flex w-full gap-2">
-              <Input
-                value={inputValue}
-                onChange={(event) => setInputValue(event.target.value)}
-                placeholder="Reponse du client..."
+              <Button
+                variant="ghost"
+                size="sm"
+                className="self-end text-muted-foreground"
+                onClick={handleEndCall}
                 disabled={isPending}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    handleSend();
-                  }
-                }}
-              />
-              <Button onClick={handleSend} disabled={isPending || !inputValue.trim()}>
-                <Send />
+              >
+                <PhoneOff />
+                Terminer l&apos;appel
               </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="self-end text-muted-foreground"
-              onClick={handleEndCall}
-              disabled={isPending}
-            >
-              <PhoneOff />
-              Terminer l&apos;appel
-            </Button>
-          </CardFooter>
+            </CardFooter>
+          )}
+        </Card>
+
+        {phase === "done" && summary && (
+          <>
+            <CallResultCard summary={summary} />
+            {callId && <CustomerCreatedCard summary={summary} callId={callId} />}
+          </>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

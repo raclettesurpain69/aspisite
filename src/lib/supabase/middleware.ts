@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 
 const PUBLIC_ROUTES = [
   "/",
+  "/demo",
   "/login",
   "/register",
   "/forgot-password",

@@ -11,11 +11,22 @@ type FinalStatus = Extract<
   "completed" | "voicemail" | "failed"
 >;
 
+export type FinalizeCallResult = {
+  customerId: string | null;
+  /** Vrai si ce numero n'existait pas encore comme client de l'entreprise. */
+  isNewCustomer: boolean;
+  summary: CallSummary | null;
+};
+
 /**
  * Point de sortie unique de la conversation, quel que soit ce qui l'a
  * declenchee (fin normale, silence du client, raccrochage brutal detecte
  * par le callback de statut Twilio). Genere le resume IA, met a jour/cree
  * le client, sauvegarde la transcription et finalise la ligne `calls`.
+ *
+ * Retourne le resultat (client, nouveaute, resume) pour les appelants qui
+ * en ont besoin (mode simulation) ; les appelants existants (webhooks
+ * Twilio) ignorent deja cette valeur de retour sans rien casser.
  */
 export async function finalizeCall(params: {
   callId: string;
@@ -25,7 +36,7 @@ export async function finalizeCall(params: {
   context: CompanyAIContext;
   status: FinalStatus;
   testMode?: boolean;
-}): Promise<void> {
+}): Promise<FinalizeCallResult> {
   const { callId, companyId, fromNumber, conversation, context, status, testMode = false } = params;
   const supabase = createServiceRoleClient();
 
@@ -56,8 +67,17 @@ export async function finalizeCall(params: {
   }
 
   let customerId: string | null = null;
+  let isNewCustomer = false;
   const phoneNumber = summary?.phoneNumber?.trim() || fromNumber;
   if (phoneNumber) {
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("phone_number", phoneNumber)
+      .maybeSingle();
+    isNewCustomer = !existingCustomer;
+
     const { data: customer } = await supabase
       .from("customers")
       .upsert(
@@ -91,6 +111,8 @@ export async function finalizeCall(params: {
       extra_fields: summary?.extraFields ?? {},
       recommended_action: summary?.recommendedAction ?? null,
       summary_text: summary?.summaryText ?? null,
+      qualification_score: summary?.qualificationScore ?? null,
+      qualification_reason: summary?.qualificationReason ?? null,
       conversation: conversationToJson(conversation),
     })
     .eq("id", callId);
@@ -116,4 +138,6 @@ export async function finalizeCall(params: {
     eventType: "call.finalized",
     message: `Appel finalise avec le statut ${status}`,
   });
+
+  return { customerId, isNewCustomer, summary };
 }
