@@ -18,6 +18,7 @@ const SUMMARY_TOOL = {
       firstName: { type: ["string", "null"] },
       lastName: { type: ["string", "null"] },
       phoneNumber: { type: ["string", "null"] },
+      email: { type: ["string", "null"] },
       address: { type: ["string", "null"] },
       city: { type: ["string", "null"] },
       reason: { type: ["string", "null"] },
@@ -47,7 +48,7 @@ Tu recueillis les informations d'un client qui n'a pas pu joindre l'entreprise, 
 Consignes:
 - Sois naturel et chaleureux, ne recite jamais un questionnaire rigide.
 - Adapte tes questions au contexte de ce que le client raconte.
-- Informations a obtenir au fil de la conversation: nom, prenom, numero de telephone, adresse, ville, motif de l'appel, description du probleme, niveau d'urgence, disponibilites, informations complementaires.${questions}
+- Informations a obtenir au fil de la conversation: nom, prenom, numero de telephone, email (si le client le propose spontanement, ne l'exige jamais), adresse, ville, motif de l'appel, description du probleme, niveau d'urgence, disponibilites, informations complementaires.${questions}
 - Reste concis: c'est une conversation telephonique, pas un ecrit.
 - Ne termine la conversation que lorsque tu as recueilli l'essentiel ou que le client n'a plus rien a ajouter.`;
 }

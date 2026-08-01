@@ -34,11 +34,13 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
         .from("calls")
         .select("id", { count: "exact", head: true })
         .eq("company_id", companyId)
+        .eq("is_simulated", false)
         .gte("created_at", since),
       supabase
         .from("calls")
         .select("id", { count: "exact", head: true })
         .eq("company_id", companyId)
+        .eq("is_simulated", false)
         .in("urgency", ["high", "critical"])
         .gte("created_at", since),
       supabase
@@ -50,12 +52,14 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
         .from("calls")
         .select("duration_seconds")
         .eq("company_id", companyId)
+        .eq("is_simulated", false)
         .gte("created_at", since)
         .not("duration_seconds", "is", null),
       supabase
         .from("calls")
         .select("id, from_number, customer_id, reason, urgency, duration_seconds, created_at")
         .eq("company_id", companyId)
+        .eq("is_simulated", false)
         .order("created_at", { ascending: false })
         .limit(5),
     ]);

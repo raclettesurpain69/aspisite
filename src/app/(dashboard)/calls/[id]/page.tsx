@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDuration } from "@/lib/utils";
 import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
+import { FakeAudioPlayer } from "@/components/calls/fake-audio-player";
 import {
   Card,
   CardContent,
@@ -52,7 +53,10 @@ export default async function CallDetailPage({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
             <div>
-              <CardTitle>{customerName ?? call.from_number}</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle>{customerName ?? call.from_number}</CardTitle>
+                {call.is_simulated && <Badge variant="outline">Simulation</Badge>}
+              </div>
               <CardDescription>
                 {new Date(call.created_at).toLocaleString("fr-FR")}
                 {call.duration_seconds !== null &&
@@ -73,6 +77,10 @@ export default async function CallDetailPage({
             <div>
               <p className="text-sm text-muted-foreground">Telephone</p>
               <p>{call.customer?.phone_number ?? call.from_number}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p>{call.customer?.email ?? "—"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Adresse</p>
@@ -98,7 +106,9 @@ export default async function CallDetailPage({
             <CardTitle>Enregistrement audio</CardTitle>
           </CardHeader>
           <CardContent className="pb-6">
-            {recordingUrl ? (
+            {call.is_simulated ? (
+              <FakeAudioPlayer />
+            ) : recordingUrl ? (
               <audio controls src={recordingUrl} className="w-full" />
             ) : (
               <p className="text-sm text-muted-foreground">

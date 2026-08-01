@@ -9,13 +9,14 @@ Le SaaS ne remplace jamais le numero de l'entreprise : celle-ci configure un
 simple renvoi d'appel conditionnel vers un numero Twilio dedie a
 l'assistant.
 
-> Statut : **Etape 3.5/5** — outillage de validation du systeme
-> telephonique avant de considerer l'etape 3 comme terminee : checklist
-> Twilio complete, page Diagnostic (verifie chaque integration en direct),
-> Journal systeme (trace chronologique de chaque appel) et Mode Test
-> (mesure les temps de reponse de chaque fournisseur). L'etape 3 n'est
-> validee qu'apres un premier appel telephonique reel (voir
-> `docs/TWILIO_SETUP.md`). Voir [Feuille de route](#feuille-de-route).
+> Statut : **Etape 3.5/5 + Mode Simulation** — outillage de validation du
+> systeme telephonique (checklist Twilio, Diagnostic, Journal systeme,
+> Mode Test) et un **Mode Simulation** (`/test-call`) qui rejoue toute la
+> boucle IA (conversation, resume, creation client, historique) sans
+> Twilio, pour demontrer le produit sans compte Twilio payant. L'etape 3
+> reste formellement validee uniquement apres un premier appel
+> telephonique reel (voir `docs/TWILIO_SETUP.md`). Voir
+> [Feuille de route](#feuille-de-route).
 
 ## Stack technique
 
@@ -44,7 +45,7 @@ src/
   app/
     page.tsx                     Landing page publique
     (auth)/                      Route group: login, register, mot de passe oublie
-    (dashboard)/                 Route group: dashboard, appels, diagnostic, journal, parametres (proteges par le middleware)
+    (dashboard)/                 Route group: dashboard, appels, test-call, diagnostic, journal, parametres (proteges par le middleware)
     auth/confirm/                Callback Supabase Auth (confirmation email, reset password)
     api/
       health/                   Health check
@@ -60,13 +61,16 @@ src/
     auth/                       Formulaires client (register/login/forgot/reset) branches aux Server Actions
     diagnostics/                Carte d'affichage d'un check (OK/Avertissement/Erreur)
     settings/                   Toggle Mode Test
+    test-call/                  Chat de simulation d'appel IA
+    calls/                      Lecteur audio fictif (appels simules)
   lib/
     supabase/                   Clients Supabase (browser, server, service role) + helper middleware
-    actions/                    Server Actions (auth, mode test)
+    actions/                    Server Actions (auth, mode test, simulation)
     data/                       Requetes de lecture (entreprise courante, dashboard, appels, parametres, logs)
     calls/                      Logique metier des appels : lookup entreprise, limites, contexte IA, finalisation, logs, chronometrage
+    simulation/                 Moteur du Mode Simulation (reutilise ai/ et calls/finalize.ts)
     diagnostics/                Verifications live (Supabase, Twilio, Claude, ElevenLabs, webhooks)
-    ai/                         AIProvider (interface) + implementation Claude
+    ai/                         AIProvider (interface) + implementation Claude + scenarios.ts (simulation)
     telephony/                  TelephonyProvider (interface) + implementation Twilio
     tts/                        TTSProvider (interface) + implementation ElevenLabs
     stt/                        STTProvider (interface) + implementation Whisper (disponible, non utilise dans la boucle d'appel — voir note plus bas)
@@ -282,6 +286,52 @@ systeme (niveau debug, avec `durationMs` en metadata). Sans overhead
 quand desactive (le mode par defaut). A activer avant le premier appel de
 test reel, puis desactiver pour ne pas polluer les logs en production.
 
+## Mode Simulation (`/test-call`)
+
+Demontre le produit sans dependre d'un compte Twilio payant : rejoue toute
+la boucle **conversation IA -> collecte d'informations -> resume ->
+creation client -> historique**, en reutilisant exactement le meme code
+que le pipeline Twilio reel (`getAIProvider()`, `getCompanyAIContext()`,
+`finalizeCall()`) — seule la "porte d'entree" change (Server Action au
+lieu d'un webhook Twilio). Brancher un jour un vrai flux Twilio
+supplementaire (au-dela du `<Gather>` actuel) ne necessitera donc pas de
+refonte de la logique IA/finalisation, deja partagee.
+
+- **Scenarios** (`src/lib/ai/scenarios.ts`) : Demande de devis, Prise de
+  rendez-vous, Demande d'information, Urgence, Client mecontent. Chaque
+  scenario ajoute une instruction au contexte IA (reutilise le mecanisme
+  existant des "questions specifiques au metier") et suggere un premier
+  message client pour demarrer rapidement.
+- **Moteur** (`src/lib/simulation/engine.ts`) : `startSimulation` cree la
+  ligne `calls` (`is_simulated = true`, `from_number`/`to_number` =
+  `"Simulation"` ou le numero principal de l'entreprise s'il existe) ;
+  `continueSimulation` boucle la conversation (meme limite
+  `MAX_CUSTOMER_TURNS` que le pipeline reel) ; `endSimulationNow` permet de
+  clore manuellement. La finalisation appelle `finalizeCall()` sans
+  modification.
+- **Securite** : les Server Actions (`src/lib/actions/simulation.ts`)
+  verifient d'abord l'entreprise de l'utilisateur connecte
+  (`getCurrentUserCompany()`, respecte RLS) avant d'utiliser le
+  `service_role` pour ecrire — aucune nouvelle policy RLS necessaire sur
+  `calls` (toujours ecrit uniquement par du code serveur de confiance).
+- **Historique** : les appels simules apparaissent dans `/calls` et
+  `/calls/[id]` avec un badge "Simulation", et un lecteur audio fictif
+  (`FakeAudioPlayer`) a la place d'un vrai enregistrement — la structure
+  (`call_recordings.storage_path`) est deja prete a recevoir un jour un
+  vrai enregistrement Twilio sans changement de schema.
+- **Exclu des metriques reelles** : les simulations ne comptent ni dans
+  les statistiques du tableau de bord (appels du jour, urgences, duree
+  moyenne) ni dans le quota mensuel du plan (`get_company_usage()`) —
+  seul le compteur "nouveaux clients" du dashboard peut ponctuellement
+  inclure un client "Simulation" (limitation mineure acceptee : la table
+  `customers` n'a pas de marqueur de provenance).
+- **Logs** : `simulation.started`, `simulation.message` (client et
+  assistant, differencies par `metadata.role`), `simulation.completed`,
+  visibles dans le Journal systeme comme les vrais appels.
+- **Champ Email** : ajoute a `customers` et `CallSummary` (absent du
+  schema initial), car demande par le mode simulation — desormais
+  collecte aussi sur les vrais appels quand le client le communique.
+
 ## Multi-tenant et securite
 
 - `src/lib/supabase/server.ts` expose deux clients : un client "utilisateur"
@@ -348,10 +398,14 @@ trial vs production). Resume rapide :
    (Claude + Gather/TTS), enregistrement audio, sauvegarde complete dans
    Supabase. **A confirmer par un premier appel telephonique reel** (voir
    ci-dessous).
-3.5. **Etape 3.5 (cette livraison)** — outillage de validation : checklist
-   Twilio (`docs/TWILIO_SETUP.md`), page Diagnostic, Journal systeme, Mode
-   Test. L'etape 3 sera consideree definitivement close des qu'un vrai
-   appel aura ete passe avec succes en utilisant ces outils.
+3.5. **Etape 3.5** — outillage de validation : checklist Twilio
+   (`docs/TWILIO_SETUP.md`), page Diagnostic, Journal systeme, Mode Test.
+   L'etape 3 sera consideree definitivement close des qu'un vrai appel
+   aura ete passe avec succes en utilisant ces outils.
+3.6. **Mode Simulation (cette livraison)** — demo complete du produit
+   sans Twilio (`/test-call`), pour continuer a avancer sur le produit
+   sans dependre d'un compte Twilio payant pendant que l'appel reel de
+   l'etape 3.5 n'est pas encore passe.
 4. **Etape 4** — resume IA (deja produit a l'etape 3, a affiner),
    notifications (email par defaut, SMS/WhatsApp optionnels) declenchees
    automatiquement a la fin de l'appel.

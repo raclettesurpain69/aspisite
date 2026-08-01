@@ -153,6 +153,7 @@ export type Database = {
           first_name: string | null;
           last_name: string | null;
           phone_number: string;
+          email: string | null;
           address: string | null;
           city: string | null;
           created_at: string;
@@ -164,6 +165,7 @@ export type Database = {
           first_name?: string | null;
           last_name?: string | null;
           phone_number: string;
+          email?: string | null;
           address?: string | null;
           city?: string | null;
           created_at?: string;
@@ -193,6 +195,7 @@ export type Database = {
           recommended_action: string | null;
           summary_text: string | null;
           conversation: Json;
+          is_simulated: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -216,6 +219,7 @@ export type Database = {
           recommended_action?: string | null;
           summary_text?: string | null;
           conversation?: Json;
+          is_simulated?: boolean;
           created_at?: string;
           updated_at?: string;
         };

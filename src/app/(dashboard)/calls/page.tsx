@@ -53,6 +53,7 @@ export default async function CallsPage() {
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
                       <th className="py-2 pr-4 font-medium">Date</th>
+                      <th className="py-2 pr-4 font-medium">Source</th>
                       <th className="py-2 pr-4 font-medium">Client</th>
                       <th className="py-2 pr-4 font-medium">Telephone</th>
                       <th className="py-2 pr-4 font-medium">Sujet</th>
@@ -67,6 +68,13 @@ export default async function CallsPage() {
                           <Link href={`/calls/${call.id}`} className="hover:underline">
                             {new Date(call.createdAt).toLocaleString("fr-FR")}
                           </Link>
+                        </td>
+                        <td className="py-2 pr-4">
+                          {call.isSimulated ? (
+                            <Badge variant="outline">Simulation</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">Twilio</span>
+                          )}
                         </td>
                         <td className="py-2 pr-4">{call.customerName ?? "—"}</td>
                         <td className="py-2 pr-4">{call.fromNumber}</td>

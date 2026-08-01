@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PhoneCall, Settings, Stethoscope, ScrollText } from "lucide-react";
+import { LayoutDashboard, PhoneCall, Settings, Stethoscope, ScrollText, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/calls", label: "Appels", icon: PhoneCall },
+  { href: "/test-call", label: "Tester un appel IA", icon: Sparkles },
   { href: "/diagnostics", label: "Diagnostic", icon: Stethoscope },
   { href: "/logs", label: "Journal systeme", icon: ScrollText },
   { href: "/settings", label: "Parametres", icon: Settings },

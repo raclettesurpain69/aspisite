@@ -9,6 +9,7 @@ export type CallListItem = {
   urgency: Database["public"]["Enums"]["call_urgency"];
   durationSeconds: number | null;
   createdAt: string;
+  isSimulated: boolean;
 };
 
 export async function listCalls(companyId: string): Promise<CallListItem[]> {
@@ -16,7 +17,7 @@ export async function listCalls(companyId: string): Promise<CallListItem[]> {
 
   const { data: calls } = await supabase
     .from("calls")
-    .select("id, from_number, customer_id, reason, urgency, duration_seconds, created_at")
+    .select("id, from_number, customer_id, reason, urgency, duration_seconds, created_at, is_simulated")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -47,6 +48,7 @@ export async function listCalls(companyId: string): Promise<CallListItem[]> {
     urgency: call.urgency,
     durationSeconds: call.duration_seconds,
     createdAt: call.created_at,
+    isSimulated: call.is_simulated,
   }));
 }
 

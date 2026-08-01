@@ -16,6 +16,7 @@ export interface CallSummary {
   firstName: string | null;
   lastName: string | null;
   phoneNumber: string | null;
+  email: string | null;
   address: string | null;
   city: string | null;
   reason: string | null;

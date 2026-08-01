@@ -66,6 +66,7 @@ export async function finalizeCall(params: {
           phone_number: phoneNumber,
           first_name: summary?.firstName ?? undefined,
           last_name: summary?.lastName ?? undefined,
+          email: summary?.email ?? undefined,
           address: summary?.address ?? undefined,
           city: summary?.city ?? undefined,
         },
