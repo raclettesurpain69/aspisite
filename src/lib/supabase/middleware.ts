@@ -11,7 +11,7 @@ const PUBLIC_ROUTES = [
   "/reset-password",
 ];
 
-const PUBLIC_PREFIXES = ["/api/voice", "/api/health"];
+const PUBLIC_PREFIXES = ["/api/voice", "/api/health", "/auth/confirm"];
 
 function isPublicRoute(pathname: string) {
   if (PUBLIC_ROUTES.includes(pathname)) return true;

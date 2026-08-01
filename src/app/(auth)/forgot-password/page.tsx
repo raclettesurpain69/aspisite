@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import {
   Card,
   CardContent,
@@ -9,8 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function ForgotPasswordPage() {
   return (
@@ -22,23 +20,7 @@ export default function ForgotPasswordPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Branche a Supabase Auth (resetPasswordForEmail) a l'etape 2 */}
-        <form className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="vous@entreprise.fr"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            Envoyer le lien
-          </Button>
-        </form>
+        <ForgotPasswordForm />
       </CardContent>
       <CardFooter className="border-t pt-6">
         <Link href="/login" className="text-sm text-muted-foreground hover:underline">
