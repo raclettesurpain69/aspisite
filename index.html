@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week-end Atelier Devis — Beaune | Formation Wedding Planner &amp; Wedding Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --porcelaine:#F7F3EC;
+    --encre:#241F1B;
+    --bordeaux:#5A1F2B;
+    --or:#A98A4E;
+    --vigne:#6B7355;
+    --blanc:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--porcelaine);
+    color:var(--encre);
+    font-family:'Jost', sans-serif;
+    font-weight:300;
+    line-height:1.7;
+  }
+  h1,h2,h3{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    margin:0;
+    color:var(--bordeaux);
+  }
+  a{color:inherit;}
+  img{max-width:100%;}
+
+  .eyebrow{
+    display:inline-block;
+    font-family:'Jost', sans-serif;
+    font-size:0.72rem;
+    letter-spacing:0.32em;
+    text-transform:uppercase;
+    color:var(--vigne);
+    font-weight:500;
+    margin-bottom:1.2rem;
+  }
+
+  .filet{
+    width:64px;
+    height:1px;
+    background:var(--or);
+    margin:1.6rem auto;
+    border:none;
+  }
+  .filet.left{margin:1.6rem 0;}
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 1.75rem;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    overflow:hidden;
+    padding:6rem 1.5rem;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(169,138,78,0.10), transparent 60%),
+      var(--porcelaine);
+  }
+  .hero-xx{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-52%);
+    font-family:'Cormorant Garamond', serif;
+    font-size:min(62vw, 62rem);
+    line-height:1;
+    color:var(--bordeaux);
+    opacity:0.055;
+    font-weight:500;
+    user-select:none;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .hero-content{
+    position:relative;
+    z-index:2;
+    max-width:760px;
+  }
+  .hero h1{
+    font-size:clamp(2.4rem, 5.5vw, 4.1rem);
+    line-height:1.12;
+    margin-bottom:1.4rem;
+  }
+  .hero .sub{
+    font-style:italic;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(1.15rem, 2vw, 1.5rem);
+    color:var(--encre);
+    max-width:620px;
+    margin:0 auto 2rem;
+    font-weight:400;
+  }
+  .hero .meta{
+    font-size:0.95rem;
+    letter-spacing:0.04em;
+    color:var(--encre);
+    margin-bottom:2rem;
+  }
+  .hero .meta strong{color:var(--bordeaux); font-weight:500;}
+
+  .badges{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:0.9rem;
+    margin-bottom:2.6rem;
+  }
+  .badge{
+    border:1px solid var(--or);
+    color:var(--bordeaux);
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:0.6rem 1.2rem;
+    background:rgba(255,255,255,0.5);
+  }
+
+  .btn{
+    display:inline-block;
+    background:var(--bordeaux);
+    color:var(--porcelaine);
+    text-decoration:none;
+    font-family:'Jost', sans-serif;
+    font-size:0.8rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    padding:1.05rem 2.6rem;
+    border:1px solid var(--bordeaux);
+    transition:background 0.25s ease, color 0.25s ease;
+    cursor:pointer;
+  }
+  .btn:hover{
+    background:var(--porcelaine);
+    color:var(--bordeaux);
+  }
+  .btn:focus-visible{
+    outline:2px solid var(--or);
+    outline-offset:3px;
+  }
+  .btn-full{
+    width:100%;
+    display:block;
+    text-align:center;
+    padding:1.15rem 2.6rem;
+    border:none;
+  }
+
+  /* ---------- SECTIONS COMMON ---------- */
+  section{padding:6rem 0;}
+  .section-head{
+    text-align:center;
+    max-width:680px;
+    margin:0 auto 3.4rem;
+  }
+  .section-head h2{
+    font-size:clamp(1.9rem, 4vw, 2.6rem);
+  }
+
+  /* ---------- CONCEPT ---------- */
+  .concept{background:var(--blanc);}
+  .concept-text{
+    max-width:700px;
+    margin:0 auto;
+    text-align:center;
+    font-size:1.08rem;
+  }
+  .concept-text p{margin:0 0 1.4rem;}
+  .highlight-box{
+    margin-top:2.2rem;
+    padding:1.6rem 2rem;
+    border:1px solid var(--or);
+    background:var(--porcelaine);
+    font-size:0.98rem;
+  }
+  .highlight-box strong{color:var(--bordeaux);}
+
+  /* ---------- CARDS PRATIQUE ---------- */
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1.6rem;
+  }
+  .card{
+    background:var(--blanc);
+    border:1px solid rgba(169,138,78,0.35);
+    padding:2.2rem 1.6rem;
+    text-align:center;
+  }
+  .card .num{
+    font-family:'Cormorant Garamond', serif;
+    font-size:2rem;
+    color:var(--or);
+    margin-bottom:0.8rem;
+    display:block;
+  }
+  .card h3{
+    font-size:1.3rem;
+    margin-bottom:0.8rem;
+  }
+  .card p{
+    font-size:0.92rem;
+    color:var(--encre);
+    margin:0;
+  }
+
+  /* ---------- PROGRAMME ---------- */
+  .programme{background:var(--blanc);}
+  .day-block{
+    margin-bottom:3.2rem;
+  }
+  .day-block:last-child{margin-bottom:0;}
+  .day-title{
+    display:flex;
+    align-items:baseline;
+    gap:1rem;
+    margin-bottom:1.6rem;
+    border-bottom:1px solid var(--or);
+    padding-bottom:0.9rem;
+  }
+  .day-title h3{
+    font-size:1.7rem;
+    color:var(--bordeaux);
+  }
+  .day-title span{
+    font-size:0.75rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--vigne);
+  }
+  .timeline{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .timeline li{
+    display:flex;
+    gap:1.4rem;
+    padding:0.85rem 0;
+    border-bottom:1px dashed rgba(169,138,78,0.35);
+    font-size:0.95rem;
+  }
+  .timeline li:last-child{border-bottom:none;}
+  .timeline .time{
+    flex:0 0 auto;
+    min-width:118px;
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.15rem;
+    color:var(--bordeaux);
+    font-weight:500;
+  }
+  .timeline .desc{flex:1;}
+
+  /* ---------- PRATIQUE INFOS ---------- */
+  .infos{
+    background:var(--bordeaux);
+    color:var(--porcelaine);
+  }
+  .infos .section-head h2{color:var(--porcelaine);}
+  .infos .eyebrow{color:var(--or);}
+  .infos-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1.6rem;
+  }
+  .infos-card{
+    border:1px solid rgba(247,243,236,0.28);
+    padding:2rem 1.5rem;
+  }
+  .infos-card h3{
+    color:var(--porcelaine);
+    font-size:1.35rem;
+    margin-bottom:0.9rem;
+    border-bottom:1px solid var(--or);
+    padding-bottom:0.7rem;
+  }
+  .infos-card p{
+    font-size:0.92rem;
+    margin:0;
+    color:rgba(247,243,236,0.9);
+  }
+
+  /* ---------- FORM ---------- */
+  .rsvp{background:var(--porcelaine);}
+  .form-wrap{
+    max-width:680px;
+    margin:0 auto;
+    background:var(--blanc);
+    padding:3rem 2.6rem;
+    border:1px solid rgba(169,138,78,0.35);
+  }
+  .form-note{
+    text-align:center;
+    font-size:0.9rem;
+    color:var(--vigne);
+    letter-spacing:0.06em;
+    margin-bottom:2.4rem;
+  }
+  .form-row{
+    margin-bottom:1.5rem;
+  }
+  .form-row.two{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.5rem;
+  }
+  label{
+    display:block;
+    font-family:'Jost', sans-serif;
+    font-size:0.7rem;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--vigne);
+    margin-bottom:0.55rem;
+  }
+  input, select, textarea{
+    width:100%;
+    font-family:'Jost', sans-serif;
+    font-size:0.95rem;
+    color:var(--encre);
+    background:var(--porcelaine);
+    border:1px solid rgba(90,31,43,0.25);
+    padding:0.8rem 0.9rem;
+    font-weight:300;
+  }
+  textarea{resize:vertical; min-height:100px;}
+  input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--or);
+    outline-offset:2px;
+  }
+  .required-note{
+    font-size:0.78rem;
+    color:var(--vigne);
+    margin-bottom:1.8rem;
+  }
+  #confirmMsg{
+    display:none;
+    margin-top:1.4rem;
+    text-align:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.2rem;
+    color:var(--bordeaux);
+    border-top:1px solid var(--or);
+    padding-top:1.4rem;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    background:var(--encre);
+    color:var(--porcelaine);
+    text-align:center;
+    padding:4rem 1.5rem 3rem;
+  }
+  .monogram{
+    font-family:'Cormorant Garamond', serif;
+    font-size:1.5rem;
+    letter-spacing:0.25em;
+    color:var(--or);
+    margin-bottom:1.2rem;
+  }
+  footer p{
+    font-size:0.88rem;
+    margin:0.4rem 0;
+    color:rgba(247,243,236,0.75);
+  }
+  footer a{
+    color:var(--or);
+    text-decoration:none;
+  }
+
+  @media (max-width: 860px){
+    .cards{grid-template-columns:repeat(2, 1fr);}
+    .infos-grid{grid-template-columns:repeat(2, 1fr);}
+    .form-row.two{grid-template-columns:1fr;}
+  }
+  @media (max-width: 560px){
+    .cards{grid-template-columns:1fr;}
+    .infos-grid{grid-template-columns:1fr;}
+    section{padding:4.2rem 0;}
+    .form-wrap{padding:2.2rem 1.4rem;}
+    .timeline .time{min-width:96px; font-size:1rem;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-xx" aria-hidden="true">XX</div>
+  <div class="hero-content">
+    <div class="eyebrow">Formation Wedding Planner &amp; Wedding Designer</div>
+    <h1>Week-end Atelier Devis à Beaune</h1>
+    <p class="sub">Apprendre à construire un devis de mariage sur un cas client réel — en avant-goût de la formation de novembre.</p>
+    <p class="meta"><strong>Du vendredi 7 au dimanche 9 août 2026</strong><br>Hôtel Henry II — Beaune Centre, 12-14 rue du Faubourg Saint-Nicolas, 21200 Beaune</p>
+    <div class="badges">
+      <span class="badge">8 places disponibles</span>
+      <span class="badge">Hébergement &amp; repas offerts</span>
+    </div>
+    <a href="#rsvp" class="btn">Confirmer ma présence</a>
+  </div>
+</section>
+
+<!-- ================= CONCEPT ================= -->
+<section class="concept">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Le concept</div>
+      <h2>Un vrai client, un vrai devis</h2>
+      <hr class="filet">
+    </div>
+    <div class="concept-text">
+      <p>Anne et Pierre Marchand, vignerons du Domaine des Coteaux Dorés à Beaune, fêteront leurs 20 ans de mariage — leurs Noces de Porcelaine — le samedi 7 novembre 2026. À trois mois de l'événement, ils souhaitent obtenir un devis.</p>
+      <p>En petits groupes, encadrés par des mentors, vous allez construire le dossier complet : de la prise de brief le vendredi soir jusqu'au pitch du dimanche midi. Anne et Pierre écouteront chaque proposition et choisiront celle qui donnera vie à leur véritable fête de novembre.</p>
+      <div class="highlight-box">
+        <strong>Ce week-end est entièrement offert</strong> : chambre à l'Hôtel Henry II, tous les repas et le matériel d'atelier sont pris en charge. Seul le trajet jusqu'à Beaune reste à votre charge.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRATIQUE (4 cartes) ================= -->
+<section class="pratique">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Au programme</div>
+      <h2>Ce que vous allez pratiquer</h2>
+      <hr class="filet">
+    </div>
+    <div class="cards">
+      <div class="card">
+        <span class="num">01</span>
+        <h3>Cahier des charges</h3>
+        <p>Prise de brief avec de vrais clients, méthode d'écoute et rédaction structurée des besoins.</p>
+      </div>
+      <div class="card">
+        <span class="num">02</span>
+        <h3>Budget &amp; rentabilité</h3>
+        <p>Construction du budget prévisionnel, calcul du prix de vente et gestion des marges.</p>
+      </div>
+      <div class="card">
+        <span class="num">03</span>
+        <h3>Proposition artistique</h3>
+        <p>Moodboard, harmonies de couleurs et planches d'inspiration — prévoir un ordinateur portable.</p>
+      </div>
+      <div class="card">
+        <span class="num">04</span>
+        <h3>Argumentaire &amp; pitch</h3>
+        <p>Défendre son devis à l'oral devant les clients, avec une posture professionnelle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROGRAMME ================= -->
+<section class="programme">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Déroulé</div>
+      <h2>Programme des 3 jours</h2>
+      <hr class="filet">
+    </div>
+
+    <div class="day-block">
+      <div class="day-title">
+        <h3>Vendredi 7 août</h3>
+        <span>Brief client</span>
+      </div>
+      <ul class="timeline">
+        <li><span class="time">17h — 19h</span><span class="desc">Arrivées &amp; installation (chambres offertes)</span></li>
+        <li><span class="time">19h30</span><span class="desc">Cocktail de bienvenue &amp; rencontre des mentors</span></li>
+        <li><span class="time">20h00</span><span class="desc">Dîner avec les clients : Anne &amp; Pierre présentent leur projet, leurs envies et leur budget indicatif — prise de brief</span></li>
+        <li><span class="time">21h30</span><span class="desc">Constitution des groupes &amp; méthode du cahier des charges</span></li>
+      </ul>
+    </div>
+
+    <div class="day-block">
+      <div class="day-title">
+        <h3>Samedi 8 août</h3>
+        <span>Construction du devis</span>
+      </div>
+      <ul class="timeline">
+        <li><span class="time">8h00</span><span class="desc">Petit-déjeuner</span></li>
+        <li><span class="time">9h — 10h30</span><span class="desc">Atelier cahier des charges (rédaction en groupe)</span></li>
+        <li><span class="time">10h30 — 12h30</span><span class="desc">Atelier budget prévisionnel &amp; calcul du prix de vente</span></li>
+        <li><span class="time">12h30</span><span class="desc">Déjeuner</span></li>
+        <li><span class="time">14h — 16h</span><span class="desc">Atelier proposition artistique &amp; moodboard (prévoir un ordinateur)</span></li>
+        <li><span class="time">16h — 18h</span><span class="desc">Construction du devis final &amp; rétroplanning</span></li>
+        <li><span class="time">18h30</span><span class="desc">Point d'étape avec les mentors</span></li>
+        <li><span class="time">20h00</span><span class="desc">Dîner — soirée libre ou travail de groupe</span></li>
+      </ul>
+    </div>
+
+    <div class="day-block">
+      <div class="day-title">
+        <h3>Dimanche 9 août</h3>
+        <span>Pitch &amp; délibération</span>
+      </div>
+      <ul class="timeline">
+        <li><span class="time">8h00</span><span class="desc">Petit-déjeuner</span></li>
+        <li><span class="time">8h45 — 10h15</span><span class="desc">Finalisation du devis &amp; préparation du pitch</span></li>
+        <li><span class="time">10h30 — 12h00</span><span class="desc">Oraux : chaque groupe présente son devis et sa proposition artistique aux clients</span></li>
+        <li><span class="time">12h00</span><span class="desc">Délibération, choix du couple &amp; débriefing métier avec les mentors</span></li>
+        <li><span class="time">13h00</span><span class="desc">Départs</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INFOS PRATIQUES ================= -->
+<section class="infos">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Informations pratiques</div>
+      <h2>Tout est prévu</h2>
+      <hr class="filet">
+    </div>
+    <div class="infos-grid">
+      <div class="infos-card">
+        <h3>Hébergement</h3>
+        <p>Votre chambre à l'Hôtel Henry II est réservée et offerte du vendredi au dimanche.</p>
+      </div>
+      <div class="infos-card">
+        <h3>Repas</h3>
+        <p>Tous les repas sont fournis, du dîner du vendredi au petit-déjeuner du dimanche. Merci de nous indiquer vos allergies.</p>
+      </div>
+      <div class="infos-card">
+        <h3>Matériel</h3>
+        <p>Les supports d'atelier sont fournis. Apportez si possible un ordinateur portable pour le moodboard et le devis.</p>
+      </div>
+      <div class="infos-card">
+        <h3>Accès</h3>
+        <p>Gare de Beaune à 10 min à pied, A6 sortie 24.1, parking à proximité. Seul le trajet reste à votre charge.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RSVP FORM ================= -->
+<section class="rsvp" id="rsvp">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Confirmation</div>
+      <h2>Réservez votre place</h2>
+      <hr class="filet">
+    </div>
+    <div class="form-wrap">
+      <p class="form-note">8 places seulement — réponse souhaitée avant le mardi 4 août 2026</p>
+      <form id="rsvpForm">
+        <div class="form-row two">
+          <div>
+            <label for="prenom">Prénom *</label>
+            <input type="text" id="prenom" name="prenom" required>
+          </div>
+          <div>
+            <label for="nom">Nom *</label>
+            <input type="text" id="nom" name="nom" required>
+          </div>
+        </div>
+
+        <div class="form-row two">
+          <div>
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div>
+            <label for="telephone">Téléphone</label>
+            <input type="tel" id="telephone" name="telephone">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="profil">Votre profil *</label>
+          <select id="profil" name="profil" required>
+            <option value="">Choisissez une option</option>
+            <option value="Inscrit(e) à la formation de novembre">Inscrit(e) à la formation de novembre</option>
+            <option value="En réflexion pour la formation">En réflexion pour la formation</option>
+            <option value="Wedding Planner / Designer en activité">Wedding Planner / Designer en activité</option>
+            <option value="En reconversion professionnelle">En reconversion professionnelle</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="presence">Présence *</label>
+          <select id="presence" name="presence" required>
+            <option value="">Choisissez une option</option>
+            <option value="Présent(e) tout le week-end">Présent(e) tout le week-end</option>
+            <option value="Absent(e), avec regrets">Absent(e), avec regrets</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="chambre">Chambre</label>
+          <select id="chambre" name="chambre">
+            <option value="">Choisissez une option</option>
+            <option value="Single">Single</option>
+            <option value="Double (à partager)">Double (à partager)</option>
+            <option value="Pas d'hébergement nécessaire">Pas d'hébergement nécessaire</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="arrivee">Heure d'arrivée estimée vendredi</label>
+          <input type="text" id="arrivee" name="arrivee" placeholder="ex. 18h00">
+        </div>
+
+        <div class="form-row">
+          <label for="allergies">Allergies / régimes alimentaires</label>
+          <input type="text" id="allergies" name="allergies">
+        </div>
+
+        <div class="form-row">
+          <label for="ordinateur">Ordinateur portable</label>
+          <select id="ordinateur" name="ordinateur">
+            <option value="">Choisissez une option</option>
+            <option value="J'apporte mon ordinateur">J'apporte mon ordinateur</option>
+            <option value="Je n'en ai pas">Je n'en ai pas</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="attentes">Vos attentes pour ce week-end</label>
+          <textarea id="attentes" name="attentes" placeholder="Facultatif"></textarea>
+        </div>
+
+        <p class="required-note">* Champs obligatoires</p>
+
+        <button type="submit" class="btn btn-full">Envoyer ma confirmation</button>
+        <div id="confirmMsg">Merci ! Il ne vous reste qu'à envoyer le mail qui vient de s'ouvrir.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="monogram">ATELIER · XX · BEAUNE</div>
+  <p>Week-end Atelier Devis — 7 au 9 août 2026 — Hôtel Henry II, Beaune Centre</p>
+  <p>Fête des Noces de Porcelaine : samedi 7 novembre 2026 — Formation de novembre : Niveau 1 du 9 au 13 · Niveau 2 du 16 au 20</p>
+  <p>Contact : <a href="mailto:avinelucas14@gmail.com">avinelucas14@gmail.com</a></p>
+</footer>
+
+<script>
+document.getElementById('rsvpForm').addEventListener('submit', function(e){
+  e.preventDefault();
+
+  var prenom = document.getElementById('prenom').value.trim();
+  var nom = document.getElementById('nom').value.trim();
+  var email = document.getElementById('email').value.trim();
+  var telephone = document.getElementById('telephone').value.trim();
+  var profil = document.getElementById('profil').value;
+  var presence = document.getElementById('presence').value;
+  var chambre = document.getElementById('chambre').value;
+  var arrivee = document.getElementById('arrivee').value.trim();
+  var allergies = document.getElementById('allergies').value.trim();
+  var ordinateur = document.getElementById('ordinateur').value;
+  var attentes = document.getElementById('attentes').value.trim();
+
+  var sujet = "Confirmation Week-end Atelier Devis Beaune — " + prenom + " " + nom;
+
+  var lignes = [
+    "Prénom : " + prenom,
+    "Nom : " + nom,
+    "Email : " + email,
+    "Téléphone : " + (telephone || "Non renseigné"),
+    "Profil : " + profil,
+    "Présence : " + presence,
+    "Chambre : " + (chambre || "Non renseigné"),
+    "Heure d'arrivée estimée vendredi : " + (arrivee || "Non renseigné"),
+    "Allergies / régimes alimentaires : " + (allergies || "Aucune"),
+    "Ordinateur portable : " + (ordinateur || "Non renseigné"),
+    "Attentes pour ce week-end : " + (attentes || "Non renseigné")
+  ];
+
+  var corps = lignes.join("\n");
+
+  var mailto = "mailto:avinelucas14@gmail.com"
+    + "?subject=" + encodeURIComponent(sujet)
+    + "&body=" + encodeURIComponent(corps);
+
+  window.location.href = mailto;
+
+  document.getElementById('confirmMsg').style.display = 'block';
+});
+</script>
+
+</body>
+</html>
