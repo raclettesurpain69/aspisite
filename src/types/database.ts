@@ -16,7 +16,13 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type CallStatus = "ringing" | "in_progress" | "completed" | "failed";
+export type CallStatus =
+  | "incoming"
+  | "answered"
+  | "completed"
+  | "failed"
+  | "voicemail"
+  | "transferred";
 export type CallUrgency = "low" | "normal" | "high" | "critical";
 export type NotificationChannel = "email" | "sms" | "whatsapp";
 export type NotificationStatus = "pending" | "sent" | "failed";
@@ -186,6 +192,7 @@ export type Database = {
           extra_fields: Json;
           recommended_action: string | null;
           summary_text: string | null;
+          conversation: Json;
           created_at: string;
           updated_at: string;
         };
@@ -208,6 +215,7 @@ export type Database = {
           extra_fields?: Json;
           recommended_action?: string | null;
           summary_text?: string | null;
+          conversation?: Json;
           created_at?: string;
           updated_at?: string;
         };

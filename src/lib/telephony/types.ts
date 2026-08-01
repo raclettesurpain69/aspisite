@@ -19,4 +19,11 @@ export interface TelephonyProvider {
 
   /** Envoie un message WhatsApp. Architecture prete, desactivable dans le MVP. */
   sendWhatsApp(to: string, body: string): Promise<void>;
+
+  /**
+   * Demarre l'enregistrement audio complet d'un appel en cours, sans
+   * interrompre le flux TwiML (Gather/Play). Twilio appelle
+   * `statusCallbackUrl` une fois l'enregistrement disponible.
+   */
+  startCallRecording(callSid: string, statusCallbackUrl: string): Promise<void>;
 }

@@ -43,4 +43,12 @@ export class TwilioTelephonyProvider implements TelephonyProvider {
       body,
     });
   }
+
+  async startCallRecording(callSid: string, statusCallbackUrl: string): Promise<void> {
+    await this.client.calls(callSid).recordings.create({
+      recordingStatusCallback: statusCallbackUrl,
+      recordingStatusCallbackEvent: ["completed"],
+      recordingChannels: "mono",
+    });
+  }
 }

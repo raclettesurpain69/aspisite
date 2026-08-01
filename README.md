@@ -9,9 +9,10 @@ Le SaaS ne remplace jamais le numero de l'entreprise : celle-ci configure un
 simple renvoi d'appel conditionnel vers un numero Twilio dedie a
 l'assistant.
 
-> Statut : **Etape 2/5** — authentification, schema de base de donnees
-> complet, Row Level Security, dashboard connecte aux vraies donnees.
-> L'IA conversationnelle et Twilio ne sont pas encore branches (voir
+> Statut : **Etape 3/5** — le systeme telephonique IA repond reellement
+> aux appels : reception Twilio, conversation Claude en temps reel,
+> synthese vocale, enregistrement, et sauvegarde complete dans Supabase.
+> Notifications et historique avance restent a batir (voir
 > [Feuille de route](#feuille-de-route)).
 
 ## Stack technique
@@ -45,8 +46,11 @@ src/
     auth/confirm/                Callback Supabase Auth (confirmation email, reset password)
     api/
       health/                   Health check
-      voice/incoming/           Webhook Twilio Voice (appel transfere) — logique etape 3
-      voice/status/             Webhook Twilio Status Callback — logique etape 3
+      voice/incoming/           Webhook Twilio Voice : 1er contact, lookup entreprise, demarre la conversation
+      voice/gather/             Reception de chaque tour de parole client, boucle la conversation
+      voice/say/                Synthese vocale a la demande (ElevenLabs), lue par <Play>
+      voice/status/             Callback statut d'appel Twilio (finalise les raccrochages abrupts)
+      voice/recording-status/   Callback enregistrement Twilio -> upload vers Supabase Storage
       notifications/send/       Envoi du resume post-appel — logique etape 4
   components/
     ui/                         Primitives shadcn/ui (button, card, input...)
@@ -56,10 +60,11 @@ src/
     supabase/                   Clients Supabase (browser, server, service role) + helper middleware
     actions/                    Server Actions (inscription, connexion, deconnexion, mot de passe)
     data/                       Requetes de lecture (entreprise courante, dashboard, appels, parametres)
+    calls/                      Logique metier des appels : lookup entreprise, limites, contexte IA, finalisation, logs
     ai/                         AIProvider (interface) + implementation Claude
     telephony/                  TelephonyProvider (interface) + implementation Twilio
     tts/                        TTSProvider (interface) + implementation ElevenLabs
-    stt/                        STTProvider (interface) + implementation Whisper
+    stt/                        STTProvider (interface) + implementation Whisper (disponible, non utilise dans la boucle d'appel — voir note plus bas)
     notifications/              Envoi email/SMS/WhatsApp + formatage du resume
     env.ts                      Validation Zod des variables d'environnement
   types/
@@ -118,12 +123,19 @@ Points d'architecture specifiquement traites :
   un futur onglet "Erreurs" rapide meme a grande echelle.
 
 Notes de validation : les migrations ont ete rejouees et testees (schema,
-triggers, isolation multi-tenant, policies RLS y compris sur Storage) via
-un Postgres local avec un schema `auth`/`storage` minimal reproduit a la
-main, car les images Docker de Supabase ne sont pas accessibles depuis cet
-environnement de developpement (registre bloque par la politique reseau).
-A executer/verifier une nouvelle fois avec `npm run supabase:start` des que
-Docker est disponible. `src/types/database.ts` a ete ecrit a la main en
+triggers, isolation multi-tenant, policies RLS y compris sur Storage,
+idempotence des upserts `calls`/`customers`/`call_recordings`/
+`call_transcriptions`, plusieurs numeros par entreprise, appels
+simultanes) via un Postgres local avec un schema `auth`/`storage` minimal
+reproduit a la main, car les images Docker de Supabase ne sont pas
+accessibles depuis cet environnement de developpement (registre bloque par
+la politique reseau). Les webhooks Twilio (`/api/voice/*`) ont ete testes
+en generant de vraies signatures Twilio (HMAC-SHA1) localement : signature
+valide acceptee, signature invalide rejetee (403), et chaque route reste
+gracieuse (TwiML/JSON de secours) meme quand Supabase est injoignable. A
+revalider en conditions reelles (`npm run supabase:start` + un appel
+telephonique effectif) des que Docker est disponible et que de vraies cles
+API sont configurees. `src/types/database.ts` a ete ecrit a la main en
 miroir exact du schema valide (la generation normale via
 `npm run supabase:types` necessite Supabase local) ; a regenerer via cette
 commande des que possible.
@@ -144,6 +156,85 @@ Implementee via Supabase Auth + Server Actions (`src/lib/actions/auth.ts`) :
   authentifie de changer son propre `company_id` ou de s'auto-promouvoir
   `owner`/`admin` en modifiant directement sa ligne `users` ; ce garde-fou ne
   s'applique pas au `service_role` (onboarding, webhooks).
+
+## Systeme telephonique IA (etape 3)
+
+Boucle complete implementee : **appel transfere -> IA repond -> conversation
+-> informations recuperees -> donnees enregistrees**. Priorite donnee a une
+boucle qui fonctionne de bout en bout plutot qu'a une experience IA
+parfaite (voir points d'amelioration a la fin de cette section).
+
+### Deroulement d'un appel
+
+1. **`POST /api/voice/incoming`** — Twilio route l'appel transfere (no
+   answer / busy / horaires fermes) vers ce webhook. La signature Twilio
+   est verifiee (`src/lib/calls/verify-request.ts`), puis l'entreprise est
+   identifiee a partir du numero appele (`company_phone_numbers`, voir
+   `src/lib/calls/company-lookup.ts`). Si le quota mensuel du plan est
+   atteint (`hasReachedMonthlyCallLimit`), l'appel est poliment refuse et
+   trace comme `failed`. Sinon : creation de la ligne `calls` (idempotente
+   via `upsert` sur `twilio_call_sid`, pour tolerer les retentatives
+   Twilio), demarrage de l'enregistrement audio en arriere-plan
+   (`TelephonyProvider.startCallRecording`), puis premier message TwiML :
+   `<Gather input="speech">` avec le message d'accueil joue via `<Play>`.
+2. **`GET /api/voice/say`** — Twilio recupere l'audio du dernier message de
+   l'assistant. Genere a la demande via ElevenLabs (`TTSProvider`) a partir
+   du texte stocke dans `calls.conversation`, jamais pre-calcule ni stocke :
+   pas de fichier transitoire a gerer, uniquement les enregistrements
+   finaux passent par Supabase Storage.
+3. **`POST /api/voice/gather`** — recoit la transcription Twilio (ASR
+   integre a `<Gather input="speech">`, aucun appel Whisper necessaire pour
+   ce tour de parole) du client. Trois issues :
+   - **silence** (aucun `SpeechResult`) : finalisation immediate en statut
+     `voicemail` ;
+   - **`MAX_CUSTOMER_TURNS` atteint** (6 tours, `src/lib/calls/constants.ts`)
+     : cloture avec un message de remerciement et finalisation `completed` ;
+   - **sinon** : `AIProvider.generateResponse` genere la reponse suivante,
+     ajoutee a `calls.conversation`, et la boucle continue (nouveau
+     `<Gather>`).
+   Toute erreur IA est rattrapee : message d'excuses + finalisation plutot
+   que de laisser l'appel en echec silencieux.
+4. **Finalisation** (`src/lib/calls/finalize.ts`) — quel que soit le
+   declencheur (fin normale, silence, raccrochage brutal detecte par
+   `/api/voice/status`), la meme fonction : appelle
+   `AIProvider.summarizeCall` pour extraire nom/adresse/urgence/resume,
+   cree ou met a jour le `customers` correspondant (upsert sur
+   `company_id, phone_number`), sauvegarde `call_transcriptions.full_text`
+   (reconstruit depuis `calls.conversation`) et met a jour la ligne `calls`
+   (`status`, `summary_text`, etc.).
+5. **`POST /api/voice/status`** — callback Twilio "Call Status Changes" (a
+   configurer sur le numero Twilio cote console/API). Seul signal fiable
+   pour les raccrochages abrupts survenus avant que `/api/voice/gather`
+   n'ait pu finaliser l'appel ; met aussi a jour `duration_seconds`.
+6. **`POST /api/voice/recording-status`** — callback "Recording Status
+   Callback" (enregistre automatiquement par `startCallRecording`).
+   Telecharge l'audio depuis Twilio (Basic Auth) et l'upload dans le
+   bucket prive `call-recordings` (`{company_id}/{call_id}.mp3`), puis
+   enregistre `call_recordings`.
+
+### Pourquoi pas de WebSocket / Media Streams
+
+Une conversation vocale "vraiment" temps reel (audio en flux continu)
+demanderait Twilio Media Streams + un serveur WebSocket dedie — complexite
+significative pour un MVP. Le choix ici (`<Gather input="speech">` pour la
+reconnaissance vocale + ElevenLabs pour la synthese) donne une conversation
+naturelle tour par tour avec une infrastructure entierement basee sur des
+routes HTTP sans etat, deployable sur Vercel sans serveur persistant.
+`STTProvider`/Whisper reste disponible dans l'architecture pour un usage
+futur (ex : re-transcription de l'audio complet pour plus de precision).
+
+### Points a ameliorer (assumes, pas bloquants pour une boucle fonctionnelle)
+
+- Fin de conversation basee sur un compteur fixe (`MAX_CUSTOMER_TURNS`)
+  plutot qu'une detection d'intention par l'IA.
+- `/api/voice/say` renvoie une reponse vide en cas d'echec ElevenLabs :
+  Twilio saute silencieusement l'invite plutot que d'utiliser une voix de
+  secours.
+- Le callback `/api/voice/status` doit etre configure manuellement sur le
+  numero Twilio (console ou API) : ce n'est pas automatise par le code.
+- Tests valides uniquement en simulant des requetes Twilio signees
+  localement (voir note de validation ci-dessous) : aucun appel telephonique
+  reel n'a pu etre passe dans cet environnement de developpement.
 
 ## Multi-tenant et securite
 
@@ -175,6 +266,19 @@ npm run dev
 
 L'application est disponible sur http://localhost:3000.
 
+### Configurer un numero Twilio pour un premier test reel
+
+Pour un test en conditions reelles (necessite un tunnel public type ngrok
+si en local, ou un deploiement) :
+
+1. Ajouter le numero dans `company_phone_numbers` (associe a une
+   entreprise existante).
+2. Sur la console Twilio, configurer ce numero :
+   - **A Call Comes In** (Voice URL) : `POST {NEXT_PUBLIC_APP_URL}/api/voice/incoming`
+   - **Call Status Changes** : `POST {NEXT_PUBLIC_APP_URL}/api/voice/status`
+3. Configurer le renvoi d'appel conditionnel de l'entreprise (no answer /
+   busy / hors horaires) vers ce numero Twilio.
+
 ### Scripts disponibles
 
 | Commande | Effet |
@@ -190,12 +294,14 @@ L'application est disponible sur http://localhost:3000.
 
 1. **Etape 1** — architecture, structure des dossiers, configuration
    Next.js/Supabase, dependances.
-2. **Etape 2 (cette livraison)** — authentification, schema de base de
-   donnees complet + Row Level Security, dashboard connecte aux vraies
-   donnees.
-3. **Etape 3** — reception des appels Twilio transferes, conversation IA
-   en temps reel (Claude + TTS/STT).
-4. **Etape 4** — transcription complete, resume IA structure,
-   notifications (email par defaut, SMS/WhatsApp optionnels).
+2. **Etape 2** — authentification, schema de base de donnees complet +
+   Row Level Security, dashboard connecte aux vraies donnees.
+3. **Etape 3 (cette livraison)** — reception des appels Twilio transferes,
+   conversation IA (Claude + Gather/TTS), enregistrement audio,
+   sauvegarde complete dans Supabase.
+4. **Etape 4** — resume IA (deja produit a l'etape 3, a affiner),
+   notifications (email par defaut, SMS/WhatsApp optionnels) declenchees
+   automatiquement a la fin de l'appel.
 5. **Etape 5** — historique des appels (recherche/filtres/tri), fiche
-   appel (audio + transcription + resume), deploiement.
+   appel deja fonctionnelle (audio + transcription + resume, etape 2) a
+   enrichir, deploiement.
