@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import { getAIProvider } from "@/lib/ai";
 import type { CompanyAIContext, ConversationMessage } from "@/lib/ai/types";
 import { getScenarioById, type ScenarioId } from "@/lib/ai/scenarios";
-import { getCompanyById } from "@/lib/calls/company-lookup";
 import { getCompanyAIContext, isTestModeEnabled } from "@/lib/calls/context";
 import { MAX_CUSTOMER_TURNS } from "@/lib/calls/constants";
 import { finalizeCall } from "@/lib/calls/finalize";
@@ -20,18 +19,13 @@ const ACTIVE_STATUSES = new Set(["incoming", "answered"]);
 
 /**
  * Reutilise le meme AIProvider/CompanyAIContext que le pipeline Twilio
- * reel, en ajoutant simplement l'instruction du scenario aux "questions
- * specifiques au metier" deja prevues par l'architecture (voir
- * ai/claude.ts) : aucune modification de AIProvider n'est necessaire pour
- * brancher un jour une vraie conversation Twilio a la place.
+ * reel, en ajoutant simplement l'instruction du scenario aux instructions
+ * ponctuelles de l'assistant (extraInstructions) : aucune modification de
+ * AIProvider n'est necessaire pour brancher un jour une vraie conversation
+ * Twilio a la place.
  */
 async function buildContext(companyId: string, scenarioId: ScenarioId): Promise<CompanyAIContext> {
-  const company = await getCompanyById(companyId);
-  if (!company) {
-    throw new Error("Entreprise introuvable.");
-  }
-
-  const baseContext = await getCompanyAIContext(companyId, company.name, company.businessType);
+  const baseContext = await getCompanyAIContext(companyId);
   const scenario = getScenarioById(scenarioId);
 
   if (!scenario) {
@@ -40,7 +34,7 @@ async function buildContext(companyId: string, scenarioId: ScenarioId): Promise<
 
   return {
     ...baseContext,
-    customQuestions: [...baseContext.customQuestions, scenario.aiInstruction],
+    extraInstructions: [...baseContext.extraInstructions, scenario.aiInstruction],
   };
 }
 

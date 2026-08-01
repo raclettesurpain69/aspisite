@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const context = await getCompanyAIContext(company.id, company.name, company.businessType);
+    const context = await getCompanyAIContext(company.id);
     const conversation: ConversationMessage[] = [{ role: "assistant", content: context.greeting }];
 
     await supabase

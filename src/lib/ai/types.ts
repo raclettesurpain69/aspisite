@@ -38,15 +38,56 @@ export interface CallSummary {
   qualificationReason: string;
 }
 
+export type AssistantTone = "professionnel" | "chaleureux" | "premium" | "direct";
+
+export type CallGoal =
+  | "rendez_vous"
+  | "qualification"
+  | "devis"
+  | "transfert_urgence"
+  | "prise_message";
+
 /**
- * Configuration IA propre a une entreprise (table `settings`, etape 2):
- * message d'accueil, secteur d'activite, questions personnalisees.
+ * Question configurable par l'entreprise (Parametres > Assistant IA).
+ * L'ordre dans le tableau `CompanyAIContext.questions` est l'ordre
+ * d'utilisation dans la conversation (pas de champ `order` separe).
+ */
+export interface AssistantQuestion {
+  id: string;
+  label: string;
+  required: boolean;
+  enabled: boolean;
+}
+
+export interface FAQEntry {
+  question: string;
+  answer: string;
+}
+
+/**
+ * Configuration IA propre a une entreprise (table `settings` + `companies`
+ * + `faq_entries`) : c'est cette structure, assemblee par
+ * getCompanyAIContext() et transformee en prompt par
+ * src/lib/ai/prompt-builder.ts, qui permet a deux entreprises d'avoir deux
+ * assistants completement differents sans qu'aucune ne redige de prompt.
  */
 export interface CompanyAIContext {
   companyName: string;
   businessType: string;
   greeting: string;
-  customQuestions: string[];
+  tone: AssistantTone;
+  language: string;
+  questions: AssistantQuestion[];
+  callGoals: CallGoal[];
+  faq: FAQEntry[];
+  isCurrentlyOpen: boolean;
+  vacationMessage: string | null;
+  /**
+   * Instructions ponctuelles non persistees (ex: scenario du mode
+   * simulation). Distinct de `questions`, qui reste la configuration
+   * durable de l'entreprise.
+   */
+  extraInstructions: string[];
 }
 
 export interface AIProvider {

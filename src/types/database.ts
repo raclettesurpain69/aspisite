@@ -302,7 +302,10 @@ export type Database = {
         Row: {
           company_id: string;
           greeting_message: string;
-          custom_questions: Json;
+          assistant_questions: Json;
+          tone: string;
+          language: string;
+          call_goals: Json;
           notification_channels: NotificationChannel[];
           test_mode: boolean;
           updated_at: string;
@@ -310,12 +313,39 @@ export type Database = {
         Insert: {
           company_id: string;
           greeting_message?: string;
-          custom_questions?: Json;
+          assistant_questions?: Json;
+          tone?: string;
+          language?: string;
+          call_goals?: Json;
           notification_channels?: NotificationChannel[];
           test_mode?: boolean;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["settings"]["Insert"]>;
+        Relationships: [];
+      };
+      faq_entries: {
+        Row: {
+          id: string;
+          company_id: string;
+          question: string;
+          answer: string;
+          is_enabled: boolean;
+          display_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          question: string;
+          answer: string;
+          is_enabled?: boolean;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["faq_entries"]["Insert"]>;
         Relationships: [];
       };
       api_keys: {

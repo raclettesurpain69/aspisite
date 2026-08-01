@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
       if (company) {
         const testMode = await isTestModeEnabled(company.id);
-        const context = await getCompanyAIContext(company.id, company.name, company.businessType);
+        const context = await getCompanyAIContext(company.id);
         await finalizeCall({
           callId: call.id,
           companyId: call.company_id,

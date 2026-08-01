@@ -95,7 +95,7 @@ Tables (`supabase/migrations/`, appliquees dans l'ordre des fichiers) :
 
 `subscription_plans`, `companies`, `company_phone_numbers`, `users`,
 `customers`, `calls`, `call_recordings`, `call_transcriptions`,
-`notifications`, `settings`, `api_keys`, `call_logs`.
+`notifications`, `settings`, `api_keys`, `call_logs`, `faq_entries`.
 
 Points d'architecture specifiquement traites :
 
@@ -374,6 +374,71 @@ refonte de la logique IA/finalisation, deja partagee.
   `/test-call` public serait une decision separee (cout des appels
   Claude/ElevenLabs expose a des visiteurs anonymes), non prise ici.
 
+## Personnalisation de l'assistant IA (`Parametres > Assistant IA`)
+
+Chaque entreprise configure entierement son propre assistant sans jamais
+ecrire de prompt : deux entreprises utilisant la plateforme peuvent avoir
+deux assistants completement differents (ton, questions, objectifs,
+horaires, FAQ), le tout assemble dynamiquement en un prompt systeme par
+`buildSystemPrompt()`.
+
+- **Page `/settings/assistant`** (6 onglets, `src/components/settings/assistant/`) :
+  - *Informations generales* : nom de l'entreprise, secteur d'activite
+    (liste fermee : Plomberie, Chauffage, Climatisation, Garage,
+    Serrurerie, Electricite, Immobilier, Cabinet medical, Autre), ton
+    (professionnel/chaleureux/premium/direct), langue.
+  - *Message d'accueil* : modele editable avec le jeton `{{entreprise}}`,
+    **apercu en temps reel** du message final.
+  - *Questions obligatoires* : ajout/suppression/reordre (fleches
+    haut/bas)/activation par question ; l'ordre du tableau est l'ordre
+    utilise pendant l'appel.
+  - *Objectifs de l'appel* : selection multiple (rendez-vous,
+    qualification, devis, transfert si urgence, simple prise de message).
+  - *Horaires* : grille des 7 jours (active/horaires), jours feries,
+    mode vacances (avec message dedie) ; stocke sur `companies.business_hours`
+    (colonne existante depuis l'etape 2, jusqu'ici inutilisee).
+  - *FAQ* : questions/reponses libres, utilisees par le prompt (et plus
+    tard exploitables telles quelles par Claude pour repondre a des
+    questions frequentes sans reformuler).
+- **`getCompanyAIContext(companyId)`** (`src/lib/calls/context.ts`) :
+  point d'entree unique, reecrit pour s'auto-suffire (un seul argument,
+  il recharge lui-meme entreprise/parametres/FAQ) — utilise par les
+  webhooks Twilio (`/api/voice/*`) et par le mode simulation
+  (`src/lib/simulation/engine.ts`) sans aucune autre modification que la
+  signature d'appel : **le mode simulation profite donc immediatement des
+  nouvelles options**, comme le pipeline Twilio reel.
+- **`buildSystemPrompt()`** (`src/lib/ai/prompt-builder.ts`) : fonction
+  pure, independante du SDK Claude, qui transforme `CompanyAIContext` en
+  prompt texte (identite + ton + langue + objectifs + questions
+  activees + FAQ + horaires/vacances + consignes generales). Le prompt
+  n'est jamais visible ni redige par l'utilisateur.
+- **Horaires** (`src/lib/calls/business-hours.ts`) : `evaluateBusinessHours()`
+  utilise `Intl.DateTimeFormat` (aucune dependance ajoutee) pour
+  determiner si l'entreprise est actuellement ouverte, avec priorite
+  mode vacances > jours feries > horaires hebdomadaires. Hors horaires,
+  l'IA adapte automatiquement son discours (n'annonce jamais de
+  rendez-vous immediat, precise que le message sera transmis).
+- **Stockage Supabase** (migration `20260811090000_assistant_customization.sql`) :
+  `settings.assistant_questions` (remplace `custom_questions`, desormais
+  un tableau d'objets `{id, label, required, enabled}` au lieu de simples
+  chaines — les entreprises existantes sont migrees automatiquement vers
+  ce format), `settings.tone`, `settings.language`, `settings.call_goals`,
+  et une nouvelle table `faq_entries` (RLS multi-tenant, meme politique
+  que `settings`). Aucune nouvelle table pour les horaires : reutilise
+  `companies.business_hours`/`companies.timezone`, deja presents.
+- **Validation** : chaine complete des migrations rejouee sur un Postgres
+  local (schema `auth`/`storage` reconstitue a la main, Docker toujours
+  indisponible dans cet environnement), y compris la conversion des
+  donnees existantes (anciennes questions "chaine de caracteres" ->
+  nouveau format objet). Deux entreprises fictives (une plomberie en ton
+  direct, un cabinet medical en ton chaleureux et en mode vacances) ont
+  ete inserees avec des configurations tres differentes, puis
+  `getCompanyAIContext()`/`buildSystemPrompt()` (le vrai code de
+  production) executes dessus pour verifier que les deux prompts
+  systeme resultants different reellement (ton, objectifs, questions
+  activees uniquement, FAQ, gestion des horaires/vacances) — voir le
+  detail dans le message de livraison de cette fonctionnalite.
+
 ## Multi-tenant et securite
 
 - `src/lib/supabase/server.ts` expose deux clients : un client "utilisateur"
@@ -444,10 +509,15 @@ trial vs production). Resume rapide :
    (`docs/TWILIO_SETUP.md`), page Diagnostic, Journal systeme, Mode Test.
    L'etape 3 sera consideree definitivement close des qu'un vrai appel
    aura ete passe avec succes en utilisant ces outils.
-3.6. **Mode Simulation (cette livraison)** — demo complete du produit
-   sans Twilio (`/test-call`), pour continuer a avancer sur le produit
-   sans dependre d'un compte Twilio payant pendant que l'appel reel de
-   l'etape 3.5 n'est pas encore passe.
+3.6. **Mode Simulation** — demo complete du produit sans Twilio
+   (`/test-call`), pour continuer a avancer sur le produit sans dependre
+   d'un compte Twilio payant pendant que l'appel reel de l'etape 3.5
+   n'est pas encore passe.
+3.7. **Personnalisation de l'assistant IA (cette livraison)** —
+   `Parametres > Assistant IA`, chaque entreprise configure son propre
+   assistant (ton, questions, objectifs, horaires, FAQ) sans ecrire de
+   prompt ; le mode simulation et le pipeline Twilio reel en profitent
+   tous les deux immediatement.
 4. **Etape 4** — resume IA (deja produit a l'etape 3, a affiner),
    notifications (email par defaut, SMS/WhatsApp optionnels) declenchees
    automatiquement a la fin de l'appel.

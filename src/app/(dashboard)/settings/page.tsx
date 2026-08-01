@@ -1,8 +1,11 @@
 import { getCurrentUserCompany } from "@/lib/data/company";
 import { getCompanySettings } from "@/lib/data/settings";
 import { formatDuration } from "@/lib/utils";
+import Link from "next/link";
+
 import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TestModeToggle } from "@/components/settings/test-mode-toggle";
 import {
   Card,
@@ -71,28 +74,19 @@ export default async function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Configuration IA</CardTitle>
+            <CardTitle>Assistant IA</CardTitle>
             <CardDescription>
-              Message d&apos;accueil et questions personnalisees par metier.
+              Ton, message d&apos;accueil, questions, objectifs d&apos;appel, horaires et FAQ de
+              l&apos;assistant telephonique.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pb-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Message d&apos;accueil</p>
-              <p>{data.settings.greetingMessage}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Questions personnalisees</p>
-              {data.settings.customQuestions.length > 0 ? (
-                <ul className="list-inside list-disc">
-                  {data.settings.customQuestions.map((question) => (
-                    <li key={question}>{question}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Aucune question personnalisee.</p>
-              )}
-            </div>
+          <CardContent className="flex items-center justify-between gap-4 pb-6">
+            <p className="text-sm text-muted-foreground">
+              Personnalisez entierement l&apos;assistant de votre entreprise, sans ecrire de prompt.
+            </p>
+            <Button asChild>
+              <Link href="/settings/assistant">Configurer l&apos;assistant IA</Link>
+            </Button>
           </CardContent>
         </Card>
 

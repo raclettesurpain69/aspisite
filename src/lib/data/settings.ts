@@ -9,7 +9,6 @@ export type CompanySettingsData = {
   };
   settings: {
     greetingMessage: string;
-    customQuestions: string[];
     notificationChannels: string[];
     testMode: boolean;
   };
@@ -38,7 +37,7 @@ export async function getCompanySettings(companyId: string): Promise<CompanySett
         .single(),
       supabase
         .from("settings")
-        .select("greeting_message, custom_questions, notification_channels, test_mode")
+        .select("greeting_message, notification_channels, test_mode")
         .eq("company_id", companyId)
         .maybeSingle(),
       supabase
@@ -58,7 +57,6 @@ export async function getCompanySettings(companyId: string): Promise<CompanySett
     },
     settings: {
       greetingMessage: settings?.greeting_message ?? "",
-      customQuestions: (settings?.custom_questions as string[] | null) ?? [],
       notificationChannels: settings?.notification_channels ?? ["email"],
       testMode: settings?.test_mode ?? false,
     },

@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const testMode = await isTestModeEnabled(company.id);
-    const context = await getCompanyAIContext(company.id, company.name, company.businessType);
+    const context = await getCompanyAIContext(company.id);
     const conversation = ((call.conversation as ConversationMessage[] | null) ?? []).slice();
     const speechResult = params.SpeechResult?.trim();
 
