@@ -3,6 +3,7 @@ import { getCompanySettings } from "@/lib/data/settings";
 import { formatDuration } from "@/lib/utils";
 import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
+import { TestModeToggle } from "@/components/settings/test-mode-toggle";
 import {
   Card,
   CardContent,
@@ -141,6 +142,21 @@ export default async function SettingsPage() {
               <p className="text-sm text-muted-foreground">Duree max. par appel</p>
               <p>{data.plan ? formatDuration(data.plan.maxCallDurationSeconds) : "—"}</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Mode Test</CardTitle>
+            <CardDescription>
+              Quand actif, chaque etape d&apos;un appel (Twilio, Claude,
+              ElevenLabs, Supabase) journalise son temps d&apos;execution
+              dans le Journal systeme. A activer avant un appel de test,
+              a desactiver ensuite pour eviter des logs superflus.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-6">
+            <TestModeToggle initialEnabled={data.settings.testMode} />
           </CardContent>
         </Card>
       </main>

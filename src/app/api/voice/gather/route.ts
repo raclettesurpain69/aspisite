@@ -6,10 +6,11 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getAIProvider } from "@/lib/ai";
 import type { ConversationMessage } from "@/lib/ai/types";
 import { getCompanyById } from "@/lib/calls/company-lookup";
-import { getCompanyAIContext } from "@/lib/calls/context";
+import { getCompanyAIContext, isTestModeEnabled } from "@/lib/calls/context";
 import { finalizeCall } from "@/lib/calls/finalize";
 import { logCallEvent } from "@/lib/calls/log";
 import { conversationToJson } from "@/lib/calls/transcript";
+import { withTiming } from "@/lib/calls/timing";
 import { errorTwiml, xmlResponse } from "@/lib/calls/twiml";
 import { verifyTwilioRequest } from "@/lib/calls/verify-request";
 import { MAX_CUSTOMER_TURNS } from "@/lib/calls/constants";
@@ -93,9 +94,19 @@ export async function POST(request: NextRequest) {
       return errorTwiml();
     }
 
+    const testMode = await isTestModeEnabled(company.id);
     const context = await getCompanyAIContext(company.id, company.name, company.businessType);
     const conversation = ((call.conversation as ConversationMessage[] | null) ?? []).slice();
     const speechResult = params.SpeechResult?.trim();
+
+    await logCallEvent({
+      companyId: call.company_id,
+      callId: call.id,
+      eventType: "webhook.gather",
+      message: speechResult
+        ? `Parole du client recue : "${speechResult}"`
+        : "Aucune parole detectee (silence).",
+    });
 
     if (!speechResult) {
       conversation.push({ role: "assistant", content: SILENCE_CLOSING_MESSAGE });
@@ -106,6 +117,7 @@ export async function POST(request: NextRequest) {
         fromNumber: call.from_number,
         conversation,
         context,
+        testMode,
         status: "voicemail",
       });
       return buildPlayThenHangupTwiml(call.id);
@@ -124,15 +136,25 @@ export async function POST(request: NextRequest) {
         fromNumber: call.from_number,
         conversation,
         context,
+        testMode,
         status: "completed",
       });
       return buildPlayThenHangupTwiml(call.id);
     }
 
     try {
-      const nextLine = await getAIProvider().generateResponse(conversation, context);
+      const nextLine = await withTiming(
+        { testMode, companyId: call.company_id, callId: call.id, provider: "Claude", action: "generate_response" },
+        () => getAIProvider().generateResponse(conversation, context)
+      );
       conversation.push({ role: "assistant", content: nextLine });
       await supabase.from("calls").update({ conversation: conversationToJson(conversation) }).eq("id", call.id);
+      await logCallEvent({
+        companyId: call.company_id,
+        callId: call.id,
+        eventType: "ai.response_generated",
+        message: `Reponse IA generee (${nextLine.length} caracteres).`,
+      });
       return buildContinueTwiml(call.id);
     } catch (error) {
       await logCallEvent({
@@ -150,6 +172,7 @@ export async function POST(request: NextRequest) {
         fromNumber: call.from_number,
         conversation,
         context,
+        testMode,
         status: "completed",
       });
       return buildPlayThenHangupTwiml(call.id);

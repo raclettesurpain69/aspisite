@@ -296,6 +296,7 @@ export type Database = {
           greeting_message: string;
           custom_questions: Json;
           notification_channels: NotificationChannel[];
+          test_mode: boolean;
           updated_at: string;
         };
         Insert: {
@@ -303,6 +304,7 @@ export type Database = {
           greeting_message?: string;
           custom_questions?: Json;
           notification_channels?: NotificationChannel[];
+          test_mode?: boolean;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["settings"]["Insert"]>;

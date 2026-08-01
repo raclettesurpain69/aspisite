@@ -9,11 +9,13 @@ Le SaaS ne remplace jamais le numero de l'entreprise : celle-ci configure un
 simple renvoi d'appel conditionnel vers un numero Twilio dedie a
 l'assistant.
 
-> Statut : **Etape 3/5** — le systeme telephonique IA repond reellement
-> aux appels : reception Twilio, conversation Claude en temps reel,
-> synthese vocale, enregistrement, et sauvegarde complete dans Supabase.
-> Notifications et historique avance restent a batir (voir
-> [Feuille de route](#feuille-de-route)).
+> Statut : **Etape 3.5/5** — outillage de validation du systeme
+> telephonique avant de considerer l'etape 3 comme terminee : checklist
+> Twilio complete, page Diagnostic (verifie chaque integration en direct),
+> Journal systeme (trace chronologique de chaque appel) et Mode Test
+> (mesure les temps de reponse de chaque fournisseur). L'etape 3 n'est
+> validee qu'apres un premier appel telephonique reel (voir
+> `docs/TWILIO_SETUP.md`). Voir [Feuille de route](#feuille-de-route).
 
 ## Stack technique
 
@@ -42,7 +44,7 @@ src/
   app/
     page.tsx                     Landing page publique
     (auth)/                      Route group: login, register, mot de passe oublie
-    (dashboard)/                 Route group: dashboard, appels, parametres (proteges par le middleware)
+    (dashboard)/                 Route group: dashboard, appels, diagnostic, journal, parametres (proteges par le middleware)
     auth/confirm/                Callback Supabase Auth (confirmation email, reset password)
     api/
       health/                   Health check
@@ -53,14 +55,17 @@ src/
       voice/recording-status/   Callback enregistrement Twilio -> upload vers Supabase Storage
       notifications/send/       Envoi du resume post-appel — logique etape 4
   components/
-    ui/                         Primitives shadcn/ui (button, card, input...)
+    ui/                         Primitives shadcn/ui (button, card, input, switch...)
     layout/                     Sidebar, topbar du dashboard
     auth/                       Formulaires client (register/login/forgot/reset) branches aux Server Actions
+    diagnostics/                Carte d'affichage d'un check (OK/Avertissement/Erreur)
+    settings/                   Toggle Mode Test
   lib/
     supabase/                   Clients Supabase (browser, server, service role) + helper middleware
-    actions/                    Server Actions (inscription, connexion, deconnexion, mot de passe)
-    data/                       Requetes de lecture (entreprise courante, dashboard, appels, parametres)
-    calls/                      Logique metier des appels : lookup entreprise, limites, contexte IA, finalisation, logs
+    actions/                    Server Actions (auth, mode test)
+    data/                       Requetes de lecture (entreprise courante, dashboard, appels, parametres, logs)
+    calls/                      Logique metier des appels : lookup entreprise, limites, contexte IA, finalisation, logs, chronometrage
+    diagnostics/                Verifications live (Supabase, Twilio, Claude, ElevenLabs, webhooks)
     ai/                         AIProvider (interface) + implementation Claude
     telephony/                  TelephonyProvider (interface) + implementation Twilio
     tts/                        TTSProvider (interface) + implementation ElevenLabs
@@ -75,6 +80,8 @@ supabase/
   migrations/                   Schema SQL complet (voir "Schema de base de donnees")
   seed.sql                      Donnees de demo pour le developpement local uniquement
   functions/                    Edge Functions (si besoin, non utilisees dans le MVP)
+docs/
+  TWILIO_SETUP.md               Checklist complete pour un premier appel de test reel
 legacy-python-tool/              Ancien script Python de ce repo (sans rapport avec CallFlow AI, conserve tel quel)
 ```
 
@@ -236,6 +243,45 @@ futur (ex : re-transcription de l'audio complet pour plus de precision).
   localement (voir note de validation ci-dessous) : aucun appel telephonique
   reel n'a pu etre passe dans cet environnement de developpement.
 
+## Valider le systeme telephonique avant l'etape 4
+
+L'etape 3 n'est consideree terminee qu'apres un vrai appel telephonique
+reussi (voir `docs/TWILIO_SETUP.md` pour la checklist complete : variables
+d'environnement exactes, URLs de webhooks, permissions Twilio, limitations
+trial vs production). Trois outils preparent et accompagnent ce test :
+
+### Page Diagnostic (`/diagnostics`)
+
+Vérifie en direct (appels reels aux APIs, lectures seules) chaque
+dependance externe et affiche un statut ✅ OK / ⚠️ Avertissement / ❌ Erreur
+pour : connexion Supabase (base), stockage Supabase (bucket
+`call-recordings`), connexion Twilio (+ type de compte trial/full),
+configuration des webhooks (Voice URL / Status Callback compares a ce qui
+est attendu pour chaque numero de `company_phone_numbers`), connexion
+Claude, connexion ElevenLabs, et variables d'environnement (detection de
+valeurs qui ressemblent a des placeholders oublies). Reservee aux
+owners/admins (`src/lib/diagnostics/checks.ts`).
+
+### Journal systeme (`/logs`)
+
+Trace chronologique (plus recent en premier) de tous les evenements
+techniques d'un appel, lus depuis `call_logs` avec RLS (chaque entreprise
+ne voit que ses propres logs) : appel recu, chaque webhook Twilio recu,
+reponse IA generee, transcription enregistree, resume genere, erreurs, et
+(a partir de l'etape 4) notifications envoyees — la convention de nommage
+`notification.sent` / `notification.failed` est deja prevue pour ce futur
+usage, mais aucun code n'envoie encore de notification a ce stade.
+
+### Mode Test (`Parametres > Mode Test`)
+
+Une fois active pour une entreprise (`settings.test_mode`), chaque etape
+d'un appel journalise le temps d'execution du fournisseur concerne
+(Twilio, Claude, ElevenLabs, Supabase) via `src/lib/calls/timing.ts`
+(`withTiming`), sous forme d'entrees `test_mode.timing` dans le Journal
+systeme (niveau debug, avec `durationMs` en metadata). Sans overhead
+quand desactive (le mode par defaut). A activer avant le premier appel de
+test reel, puis desactiver pour ne pas polluer les logs en production.
+
 ## Multi-tenant et securite
 
 - `src/lib/supabase/server.ts` expose deux clients : un client "utilisateur"
@@ -268,8 +314,9 @@ L'application est disponible sur http://localhost:3000.
 
 ### Configurer un numero Twilio pour un premier test reel
 
-Pour un test en conditions reelles (necessite un tunnel public type ngrok
-si en local, ou un deploiement) :
+Voir **`docs/TWILIO_SETUP.md`** pour la checklist complete (variables
+d'environnement exactes, URLs de webhooks, permissions, limitations
+trial vs production). Resume rapide :
 
 1. Ajouter le numero dans `company_phone_numbers` (associe a une
    entreprise existante).
@@ -278,6 +325,7 @@ si en local, ou un deploiement) :
    - **Call Status Changes** : `POST {NEXT_PUBLIC_APP_URL}/api/voice/status`
 3. Configurer le renvoi d'appel conditionnel de l'entreprise (no answer /
    busy / hors horaires) vers ce numero Twilio.
+4. Verifier la page `/diagnostics` du dashboard avant de decrocher.
 
 ### Scripts disponibles
 
@@ -296,9 +344,14 @@ si en local, ou un deploiement) :
    Next.js/Supabase, dependances.
 2. **Etape 2** — authentification, schema de base de donnees complet +
    Row Level Security, dashboard connecte aux vraies donnees.
-3. **Etape 3 (cette livraison)** — reception des appels Twilio transferes,
-   conversation IA (Claude + Gather/TTS), enregistrement audio,
-   sauvegarde complete dans Supabase.
+3. **Etape 3** — reception des appels Twilio transferes, conversation IA
+   (Claude + Gather/TTS), enregistrement audio, sauvegarde complete dans
+   Supabase. **A confirmer par un premier appel telephonique reel** (voir
+   ci-dessous).
+3.5. **Etape 3.5 (cette livraison)** — outillage de validation : checklist
+   Twilio (`docs/TWILIO_SETUP.md`), page Diagnostic, Journal systeme, Mode
+   Test. L'etape 3 sera consideree definitivement close des qu'un vrai
+   appel aura ete passe avec succes en utilisant ces outils.
 4. **Etape 4** — resume IA (deja produit a l'etape 3, a affiner),
    notifications (email par defaut, SMS/WhatsApp optionnels) declenchees
    automatiquement a la fin de l'appel.

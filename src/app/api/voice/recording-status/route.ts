@@ -2,7 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { env } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { isTestModeEnabled } from "@/lib/calls/context";
 import { logCallEvent } from "@/lib/calls/log";
+import { withTiming } from "@/lib/calls/timing";
 import { verifyTwilioRequest } from "@/lib/calls/verify-request";
 
 /**
@@ -51,14 +53,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
+  const testMode = await isTestModeEnabled(call.company_id);
+
+  await logCallEvent({
+    companyId: call.company_id,
+    callId: call.id,
+    eventType: "webhook.recording_status",
+    message: `Callback enregistrement Twilio recu (statut : ${params.RecordingStatus})`,
+  });
+
   try {
     const authHeader = Buffer.from(
       `${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`
     ).toString("base64");
 
-    const audioResponse = await fetch(`${recordingUrl}.mp3`, {
-      headers: { Authorization: `Basic ${authHeader}` },
-    });
+    const audioResponse = await withTiming(
+      { testMode, companyId: call.company_id, callId: call.id, provider: "Twilio", action: "download_recording" },
+      () => fetch(`${recordingUrl}.mp3`, { headers: { Authorization: `Basic ${authHeader}` } })
+    );
 
     if (!audioResponse.ok) {
       throw new Error(`Telechargement de l'enregistrement echoue (${audioResponse.status})`);
@@ -67,9 +79,13 @@ export async function POST(request: NextRequest) {
     const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
     const storagePath = `${call.company_id}/${call.id}.mp3`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("call-recordings")
-      .upload(storagePath, audioBuffer, { contentType: "audio/mpeg", upsert: true });
+    const { error: uploadError } = await withTiming(
+      { testMode, companyId: call.company_id, callId: call.id, provider: "Supabase", action: "storage_upload" },
+      () =>
+        supabase.storage
+          .from("call-recordings")
+          .upload(storagePath, audioBuffer, { contentType: "audio/mpeg", upsert: true })
+    );
 
     if (uploadError) {
       throw new Error(`Upload Supabase Storage echoue : ${uploadError.message}`);

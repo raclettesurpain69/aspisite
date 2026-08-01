@@ -30,3 +30,21 @@ export async function getCompanyAIContext(
     customQuestions: (settings?.custom_questions as string[] | null) ?? [],
   };
 }
+
+/**
+ * Indique si le Mode Test est actif pour cette entreprise (parametres).
+ * Requete separee et volontairement minimaliste (une seule colonne) pour
+ * ne pas coupler CompanyAIContext, partage avec AIProvider, a une
+ * preoccupation d'observabilite.
+ */
+export async function isTestModeEnabled(companyId: string): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+
+  const { data } = await supabase
+    .from("settings")
+    .select("test_mode")
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  return data?.test_mode ?? false;
+}

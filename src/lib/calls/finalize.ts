@@ -3,6 +3,7 @@ import type { CallSummary, CompanyAIContext, ConversationMessage } from "@/lib/a
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { logCallEvent } from "@/lib/calls/log";
 import { buildTranscriptText, conversationToJson } from "@/lib/calls/transcript";
+import { withTiming } from "@/lib/calls/timing";
 import type { Database } from "@/types/database";
 
 type FinalStatus = Extract<
@@ -23,8 +24,9 @@ export async function finalizeCall(params: {
   conversation: ConversationMessage[];
   context: CompanyAIContext;
   status: FinalStatus;
+  testMode?: boolean;
 }): Promise<void> {
-  const { callId, companyId, fromNumber, conversation, context, status } = params;
+  const { callId, companyId, fromNumber, conversation, context, status, testMode = false } = params;
   const supabase = createServiceRoleClient();
 
   const hasCustomerSpeech = conversation.some((turn) => turn.role === "customer");
@@ -32,7 +34,16 @@ export async function finalizeCall(params: {
   let summary: CallSummary | null = null;
   if (hasCustomerSpeech && status !== "failed") {
     try {
-      summary = await getAIProvider().summarizeCall(conversation, context);
+      summary = await withTiming(
+        { testMode, companyId, callId, provider: "Claude", action: "summarize_call" },
+        () => getAIProvider().summarizeCall(conversation, context)
+      );
+      await logCallEvent({
+        companyId,
+        callId,
+        eventType: "call.summary_generated",
+        message: `Resume IA genere (urgence : ${summary.urgency}).`,
+      });
     } catch (error) {
       await logCallEvent({
         companyId,
@@ -90,6 +101,12 @@ export async function finalizeCall(params: {
         { call_id: callId, full_text: buildTranscriptText(conversation) },
         { onConflict: "call_id" }
       );
+    await logCallEvent({
+      companyId,
+      callId,
+      eventType: "call.transcription_saved",
+      message: "Transcription complete enregistree.",
+    });
   }
 
   await logCallEvent({

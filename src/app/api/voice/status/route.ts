@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import type { ConversationMessage } from "@/lib/ai/types";
 import { getCompanyById } from "@/lib/calls/company-lookup";
-import { getCompanyAIContext } from "@/lib/calls/context";
+import { getCompanyAIContext, isTestModeEnabled } from "@/lib/calls/context";
 import { finalizeCall } from "@/lib/calls/finalize";
 import { logCallEvent } from "@/lib/calls/log";
 import { verifyTwilioRequest } from "@/lib/calls/verify-request";
@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
+  await logCallEvent({
+    companyId: call.company_id,
+    callId: call.id,
+    eventType: "webhook.status",
+    message: `Callback statut Twilio recu : ${callStatus}`,
+  });
+
   if (callStatus === "completed") {
     if (FINALIZED_STATUSES.has(call.status)) {
       await supabase
@@ -62,6 +69,7 @@ export async function POST(request: NextRequest) {
       const hasCustomerSpeech = conversation.some((turn) => turn.role === "customer");
 
       if (company) {
+        const testMode = await isTestModeEnabled(company.id);
         const context = await getCompanyAIContext(company.id, company.name, company.businessType);
         await finalizeCall({
           callId: call.id,
@@ -69,6 +77,7 @@ export async function POST(request: NextRequest) {
           fromNumber: call.from_number,
           conversation,
           context,
+          testMode,
           status: hasCustomerSpeech ? "completed" : "voicemail",
         });
         await supabase

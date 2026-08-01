@@ -2,7 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getTTSProvider } from "@/lib/tts";
+import { isTestModeEnabled } from "@/lib/calls/context";
 import { logCallEvent } from "@/lib/calls/log";
+import { withTiming } from "@/lib/calls/timing";
 import type { ConversationMessage } from "@/lib/ai/types";
 
 /**
@@ -37,7 +39,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const audio = await getTTSProvider().synthesize(lastTurn.content);
+    const testMode = await isTestModeEnabled(call.company_id);
+    const audio = await withTiming(
+      { testMode, companyId: call.company_id, callId: call.id, provider: "ElevenLabs", action: "synthesize" },
+      () => getTTSProvider().synthesize(lastTurn.content)
+    );
     return new NextResponse(new Uint8Array(audio), {
       headers: { "Content-Type": "audio/mpeg" },
     });

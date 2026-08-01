@@ -5,10 +5,11 @@ import { env } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getTelephonyProvider } from "@/lib/telephony";
 import { getCompanyByPhoneNumber } from "@/lib/calls/company-lookup";
-import { getCompanyAIContext } from "@/lib/calls/context";
+import { getCompanyAIContext, isTestModeEnabled } from "@/lib/calls/context";
 import { hasReachedMonthlyCallLimit } from "@/lib/calls/limits";
 import { logCallEvent } from "@/lib/calls/log";
 import { conversationToJson } from "@/lib/calls/transcript";
+import { withTiming } from "@/lib/calls/timing";
 import { errorTwiml, xmlResponse } from "@/lib/calls/twiml";
 import { verifyTwilioRequest } from "@/lib/calls/verify-request";
 import type { ConversationMessage } from "@/lib/ai/types";
@@ -48,6 +49,15 @@ export async function POST(request: NextRequest) {
       return errorTwiml("Ce numero n'est pas configure. Merci de contacter l'entreprise directement.");
     }
 
+    const testMode = await isTestModeEnabled(company.id);
+
+    await logCallEvent({
+      companyId: company.id,
+      eventType: "webhook.incoming",
+      message: `Webhook Twilio /incoming recu (de ${fromNumber} vers ${toNumber})`,
+      metadata: { callSid },
+    });
+
     const supabase = createServiceRoleClient();
 
     if (await hasReachedMonthlyCallLimit(company.id)) {
@@ -76,20 +86,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: call, error: insertError } = await supabase
-      .from("calls")
-      .upsert(
-        {
-          company_id: company.id,
-          from_number: fromNumber,
-          to_number: toNumber,
-          twilio_call_sid: callSid,
-          status: "incoming",
-        },
-        { onConflict: "twilio_call_sid" }
-      )
-      .select("id")
-      .single();
+    const { data: call, error: insertError } = await withTiming(
+      { testMode, companyId: company.id, callId: null, provider: "Supabase", action: "create_call_row" },
+      () =>
+        supabase
+          .from("calls")
+          .upsert(
+            {
+              company_id: company.id,
+              from_number: fromNumber,
+              to_number: toNumber,
+              twilio_call_sid: callSid,
+              status: "incoming",
+            },
+            { onConflict: "twilio_call_sid" }
+          )
+          .select("id")
+          .single()
+    );
 
     if (insertError || !call) {
       await logCallEvent({
@@ -102,10 +116,21 @@ export async function POST(request: NextRequest) {
       return errorTwiml();
     }
 
+    await logCallEvent({
+      companyId: company.id,
+      callId: call.id,
+      eventType: "call.received",
+      message: `Nouvel appel entrant enregistre (de ${fromNumber})`,
+    });
+
     try {
-      await getTelephonyProvider().startCallRecording(
-        callSid,
-        `${env.NEXT_PUBLIC_APP_URL}/api/voice/recording-status`
+      await withTiming(
+        { testMode, companyId: company.id, callId: call.id, provider: "Twilio", action: "start_recording" },
+        () =>
+          getTelephonyProvider().startCallRecording(
+            callSid,
+            `${env.NEXT_PUBLIC_APP_URL}/api/voice/recording-status`
+          )
       );
     } catch (error) {
       await logCallEvent({
