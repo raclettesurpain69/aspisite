@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plateforme Dash</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0b0c14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, sans-serif;
+  }
+  #game canvas {
+    box-shadow: 0 0 50px rgba(0,0,0,.6);
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<script src="phaser.min.js"></script>
+<script>
+const WIDTH = 800;
+const HEIGHT = 450;
+
+const RUN_SPEED = 240;
+const JUMP_VELOCITY = -430;
+const JUMP_CUT = 0.5;
+const COYOTE_MS = 100;
+const BUFFER_MS = 120;
+
+const DASH_SPEED = 650;
+const DASH_DURATION = 140;
+const DASH_COOLDOWN = 450;
+
+class PlayScene extends Phaser.Scene {
+  constructor() {
+    super('play');
+  }
+
+  create() {
+    this.won = false;
+    this.facing = 1;
+    this.isDashing = false;
+    this.lastGroundedAt = -Infinity;
+    this.lastJumpPressedAt = -Infinity;
+    this.lastDashAt = -Infinity;
+    this.startedAt = this.time.now;
+
+    this.makeTextures();
+    this.drawDecor();
+
+    this.platforms = [];
+    this.addPlatform(140, 380, 240, 24);
+    this.addPlatform(430, 290, 200, 24);
+    this.addPlatform(700, 180, 200, 24);
+
+    this.player = this.physics.add.sprite(140, 330, 'player');
+    this.player.setSize(22, 34);
+    this.player.setCollideWorldBounds(true);
+    this.physics.add.collider(this.player, this.platforms);
+
+    this.coin = this.physics.add.sprite(700, 138, 'coin');
+    this.coin.body.setAllowGravity(false);
+    this.coin.body.setCircle(10);
+    this.tweens.add({ targets: this.coin, y: this.coin.y - 10, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: this.coin, angle: 360, duration: 3000, repeat: -1 });
+
+    this.physics.add.overlap(this.player, this.coin, this.collectCoin, null, this);
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+    this.dashKey2 = this.input.keyboard.addKey('X');
+
+    this.add.text(16, 14, '← → courir   ↑ / Espace sauter   Maj / X dash', {
+      fontFamily: 'monospace', fontSize: '14px', color: '#cdd3ff',
+    }).setDepth(10);
+  }
+
+  makeTextures() {
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+
+    g.fillStyle(0x6cf0ff, 1);
+    g.fillRoundedRect(0, 0, 24, 36, 6);
+    g.fillStyle(0x12222a, 1);
+    g.fillRect(14, 10, 6, 6);
+    g.generateTexture('player', 24, 36);
+    g.clear();
+
+    g.fillStyle(0x3a4a7a, 1);
+    g.fillRect(0, 0, 32, 32);
+    g.fillStyle(0x566bd6, 1);
+    g.fillRect(0, 0, 32, 6);
+    g.generateTexture('platform', 32, 32);
+    g.clear();
+
+    g.fillStyle(0xffd34d, 1);
+    g.fillCircle(10, 10, 10);
+    g.fillStyle(0xffe9a8, 1);
+    g.fillCircle(10, 10, 5);
+    g.generateTexture('coin', 20, 20);
+    g.destroy();
+  }
+
+  drawDecor() {
+    const g = this.add.graphics();
+    g.fillStyle(0x23264a, 0.6);
+    for (let i = 0; i < 40; i++) {
+      const x = Phaser.Math.Between(0, WIDTH);
+      const y = Phaser.Math.Between(0, 320);
+      const r = Phaser.Math.Between(1, 2);
+      g.fillCircle(x, y, r);
+    }
+    g.setDepth(-10);
+  }
+
+  addPlatform(x, y, w, h) {
+    const plat = this.physics.add.staticImage(x, y, 'platform');
+    plat.setDisplaySize(w, h);
+    plat.refreshBody();
+    this.platforms.push(plat);
+  }
+
+  startDash(time) {
+    this.isDashing = true;
+    this.dashStartedAt = time;
+    this.lastDashAt = time;
+    const body = this.player.body;
+    body.setAllowGravity(false);
+    body.setVelocity(this.facing * DASH_SPEED, 0);
+    this.player.setTint(0x9df9ff);
+  }
+
+  endDash() {
+    this.isDashing = false;
+    this.player.clearTint();
+    this.player.body.setAllowGravity(true);
+  }
+
+  collectCoin(player, coin) {
+    if (this.won) return;
+    this.won = true;
+    coin.disableBody(true, true);
+    this.player.setVelocity(0, 0);
+    this.physics.pause();
+    const elapsed = Math.round((this.time.now - this.startedAt) / 100) / 10;
+    this.time.delayedCall(250, () => this.scene.start('victory', { time: elapsed }));
+  }
+
+  update(time) {
+    if (this.won) return;
+
+    if (this.player.y > HEIGHT + 60) {
+      this.player.setPosition(140, 330);
+      this.player.setVelocity(0, 0);
+      this.endDash();
+    }
+
+    const body = this.player.body;
+    const onFloor = body.blocked.down;
+    if (onFloor) this.lastGroundedAt = time;
+
+    const left = this.cursors.left.isDown || this.wasd.A.isDown;
+    const right = this.cursors.right.isDown || this.wasd.D.isDown;
+    const jumpKeys = [this.cursors.up, this.cursors.space, this.wasd.W];
+    const jumpJustDown = jumpKeys.some((k) => Phaser.Input.Keyboard.JustDown(k));
+    const jumpJustUp = jumpKeys.some((k) => Phaser.Input.Keyboard.JustUp(k));
+    const dashJustDown = Phaser.Input.Keyboard.JustDown(this.cursors.shift) || Phaser.Input.Keyboard.JustDown(this.dashKey2);
+
+    if (jumpJustDown) this.lastJumpPressedAt = time;
+
+    if (dashJustDown && !this.isDashing && time - this.lastDashAt > DASH_COOLDOWN) {
+      this.startDash(time);
+    }
+
+    if (this.isDashing) {
+      if (time - this.dashStartedAt > DASH_DURATION) this.endDash();
+      return;
+    }
+
+    let dir = 0;
+    if (left) dir = -1;
+    else if (right) dir = 1;
+    if (dir !== 0) {
+      this.facing = dir;
+      this.player.setFlipX(dir < 0);
+    }
+    body.setVelocityX(dir * RUN_SPEED);
+
+    const canJump = time - this.lastGroundedAt <= COYOTE_MS;
+    const wantsJump = time - this.lastJumpPressedAt <= BUFFER_MS;
+    if (canJump && wantsJump) {
+      body.setVelocityY(JUMP_VELOCITY);
+      this.lastGroundedAt = -Infinity;
+      this.lastJumpPressedAt = -Infinity;
+    }
+
+    if (jumpJustUp && body.velocity.y < 0) {
+      body.setVelocityY(body.velocity.y * JUMP_CUT);
+    }
+  }
+}
+
+class VictoryScene extends Phaser.Scene {
+  constructor() {
+    super('victory');
+  }
+
+  init(data) {
+    this.timeTaken = data.time;
+  }
+
+  create() {
+    this.add.rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x10121c);
+    this.add.text(WIDTH / 2, 170, '🎉 Victoire ! 🎉', {
+      fontFamily: 'system-ui, sans-serif', fontSize: '42px', color: '#ffd34d',
+    }).setOrigin(0.5);
+    this.add.text(WIDTH / 2, 230, `Pièce récupérée en ${this.timeTaken}s`, {
+      fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#cdd3ff',
+    }).setOrigin(0.5);
+    this.add.text(WIDTH / 2, 280, 'Appuie sur R pour rejouer', {
+      fontFamily: 'system-ui, sans-serif', fontSize: '18px', color: '#8d97d6',
+    }).setOrigin(0.5);
+    this.input.keyboard.once('keydown-R', () => this.scene.start('play'));
+  }
+}
+
+const config = {
+  type: Phaser.AUTO,
+  parent: 'game',
+  width: WIDTH,
+  height: HEIGHT,
+  backgroundColor: '#1d1d28',
+  pixelArt: true,
+  physics: {
+    default: 'arcade',
+    arcade: { gravity: { x: 0, y: 900 }, debug: false },
+  },
+  scene: [PlayScene, VictoryScene],
+};
+
+const game = new Phaser.Game(config);
+window.game = game;
+</script>
+</body>
+</html>
